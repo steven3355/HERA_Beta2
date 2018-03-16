@@ -70,6 +70,7 @@ public class MessageSystem {
             if (curConnection.getNeighborAndroidID().equals(dest)) {
                 Log.d(TAG, "Neighbor " + dest + " is the destination");
                 curConnection.pushToSendQueue(dest);
+
             }
             else if (neighborReachability > myReachability) {
                 Log.d(TAG, "My reachability for destionation " + dest + " is " + myReachability);

@@ -46,6 +46,7 @@ public class BLEHandler {
     static final int _mtu = 400;
     Context sContext;
     public static boolean connecting = false;
+    public static boolean transmitting = false;
 
     private String TAG = "BLEHandler";
     BLEHandler(Context systemContext) {
@@ -70,18 +71,14 @@ public class BLEHandler {
         String TAG = "toSend";
         BluetoothGatt gatt = curConnection.getGatt();
         if (gatt != null) {
+            transmitting = true;
             Log.d(TAG, "client gatt found, sending message");
             prepareToSendMessage(curConnection);
             BluetoothGattCharacteristic toSend = gatt.getService(mServiceUUID).getCharacteristic(mCharUUID);
             toSend.setValue(mConnectionSystem.getToSendFragment(gatt, 0, ConnectionSystem.DATA_TYPE_MESSAGE));
-
             gatt.writeCharacteristic(toSend);
         }
-//        else {
-//            Log.d(TAG, "Client gatt not found");
-//            final String address = curConnection.getDevice().getAddress();
-//            establishConnection(address);
-//        }
+
     }
     public void updateMessageSystemUI() {
         ((Activity)sContext).runOnUiThread(new Runnable() {

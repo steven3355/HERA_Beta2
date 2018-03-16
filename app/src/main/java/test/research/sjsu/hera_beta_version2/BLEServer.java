@@ -12,6 +12,7 @@ import android.util.Log;
 
 import java.util.Arrays;
 
+import static test.research.sjsu.hera_beta_version2.BLEHandler.transmitting;
 import static test.research.sjsu.hera_beta_version2.MainActivity.android_id;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mBLEHandler;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mConnectionSystem;
@@ -94,6 +95,15 @@ public class BLEServer {
                         String neighborAndroidID = curConnection.getNeighborAndroidID();
                         mHera.updateDirectHop(neighborAndroidID);
                         mHera.updateTransitiveHops(neighborAndroidID, curConnection.getNeighborHERAMatrix());
+                        while(transmitting)
+                        {
+                            try {
+                                Thread.sleep(1000);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            Log.d(TAG, "Other thread transmitting, waiting");
+                        }
                         mMessageSystem.buildToSendMessageQueue(curConnection);
                         if (!curConnection.isToSendQueueEmpty()) {
                             mBLEHandler.sendMessage(curConnection);

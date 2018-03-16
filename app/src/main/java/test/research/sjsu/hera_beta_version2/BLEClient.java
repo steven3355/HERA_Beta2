@@ -18,6 +18,7 @@ import static test.research.sjsu.hera_beta_version2.BLEHandler.connectionStatus;
 import static test.research.sjsu.hera_beta_version2.BLEHandler.mAndroidIDCharUUID;
 import static test.research.sjsu.hera_beta_version2.BLEHandler.mCharUUID;
 import static test.research.sjsu.hera_beta_version2.BLEHandler.mServiceUUID;
+import static test.research.sjsu.hera_beta_version2.BLEHandler.transmitting;
 import static test.research.sjsu.hera_beta_version2.MainActivity.android_id;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mBLEHandler;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mConnectionSystem;
@@ -176,6 +177,7 @@ public class BLEClient {
                     else {
                         Log.d(TAG, "All messages have been transmitted, the connection will now terminate");
                         curConnection.updateLastConnectedTime();
+                        transmitting = false;
                         gatt.disconnect();
                     }
                 }
