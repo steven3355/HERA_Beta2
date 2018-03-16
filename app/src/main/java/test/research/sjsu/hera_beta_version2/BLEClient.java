@@ -22,6 +22,7 @@ import static test.research.sjsu.hera_beta_version2.MainActivity.android_id;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mBLEHandler;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mConnectionSystem;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mHera;
+import static test.research.sjsu.hera_beta_version2.MainActivity.mMessageSystem;
 
 
 /**
@@ -85,8 +86,8 @@ public class BLEClient {
                 gatt.discoverServices();
             }
             else if(newState == BluetoothGatt.STATE_DISCONNECTED){
+                mBLEHandler.updateMessageSystemUI();
                 connectionStatus.put(gatt.getDevice(), 0);
-                connecting = false;
                 gatt.close();
             }
         }
@@ -106,7 +107,7 @@ public class BLEClient {
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
             super.onMtuChanged(gatt, mtu, status);
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                Log.d(TAG, "MTU changed with " + gatt.getDevice() + " to " + mtu);
+//                Log.d(TAG, "MTU changed with " + gatt.getDevice() + " to " + mtu);
                 mConnectionSystem.getConnection(mConnectionSystem.getAndroidID(gatt.getDevice())).setClientMTU(mtu);
                 sendAndroidID(gatt);
             }
@@ -125,7 +126,8 @@ public class BLEClient {
             else if (mConnectionSystem.isHERANode(gatt)) {
                 String neighborAndroidID = characteristic.getStringValue(0);
                 Log.d(TAG, "neighbor Android ID: " + neighborAndroidID);
-                if (mConnectionSystem.getConnection(neighborAndroidID) == null || mConnectionSystem.getConnection(neighborAndroidID).getLastConnectedTimeDiff() >= 200000) {
+                if (mConnectionSystem.getConnection(neighborAndroidID) == null || mConnectionSystem.getConnection(neighborAndroidID).getLastConnectedTimeDiff() >= 20   ) {
+
                     mConnectionSystem.updateConnection(neighborAndroidID, gatt);
                     gatt.requestMtu(BLEHandler._mtu);
                     Log.d(TAG, "Requesting mtu change of " + BLEHandler._mtu);
@@ -159,10 +161,23 @@ public class BLEClient {
                         Log.d(TAG, "toSend is not empty, sending message");
                         mBLEHandler.sendMessage(curConnection);
                     }
+                    else {
+                        curConnection.updateLastConnectedTime();
+                        gatt.disconnect();
+                    }
                 }
                 if (dataType == ConnectionSystem.DATA_TYPE_MESSAGE) {
-                    Log.d(TAG, "All messages have been transmitted, the connection will now terminate");
-                    gatt.disconnect();
+                    mMessageSystem.MessageAck(curConnection);
+                    mBLEHandler.updateMessageSystemUI();
+                    if (!curConnection.isToSendQueueEmpty()) {
+                        Log.d(TAG, "Message delivered, sending next message");
+                        mBLEHandler.sendMessage(curConnection);
+                    }
+                    else {
+                        Log.d(TAG, "All messages have been transmitted, the connection will now terminate");
+                        curConnection.updateLastConnectedTime();
+                        gatt.disconnect();
+                    }
                 }
             }
             else {
@@ -173,4 +188,5 @@ public class BLEClient {
             }
         }
     };
+
 }

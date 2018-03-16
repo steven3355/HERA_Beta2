@@ -66,7 +66,7 @@ public class BLEServer {
         public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
             if (characteristic.getUuid() == BLEHandler.mAndroidIDCharUUID) {
-                Log.d(TAG, "Android ID read request received, sending android ID" + android_id);
+//                Log.d(TAG, "Android ID read request received, sending android ID" + android_id);
                 mBluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, android_id.getBytes());
             }
         }
@@ -97,10 +97,12 @@ public class BLEServer {
                         mMessageSystem.buildToSendMessageQueue(curConnection);
                         if (!curConnection.isToSendQueueEmpty()) {
                             mBLEHandler.sendMessage(curConnection);
-                            Log.d(TAG, "sendMessage Function called");
+                        }
+                        else {
+                            Log.d(TAG, "No message to send");
                         }
                     } else if (dataType == ConnectionSystem.DATA_TYPE_MESSAGE) {
-                        curConnection.buildMessage(mMessageSystem);
+                        curConnection.buildMessage();
                         curConnection.resetCache();
                     }
                 }

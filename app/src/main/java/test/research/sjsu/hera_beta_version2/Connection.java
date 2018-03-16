@@ -14,6 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
+import static test.research.sjsu.hera_beta_version2.MainActivity.mBLEHandler;
+import static test.research.sjsu.hera_beta_version2.MainActivity.mMessageSystem;
+
 /**
  * Created by Steven on 3/13/2018.
  */
@@ -42,7 +45,7 @@ public class Connection {
         _toSendQueue = new LinkedList<>();
         _clientMTU = 20;
         _Datasize = _clientMTU - _connectionOverhead;
-        _lastConnectedTime = System.currentTimeMillis();
+        _lastConnectedTime = System.currentTimeMillis() / 1000;
     }
     public Connection(String androidID, BluetoothDevice device) {
         _device = device;
@@ -77,9 +80,9 @@ public class Connection {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(cacheByteArr);
             input = new ObjectInputStream(inputStream);
             _neighborHERAMatrix = (Map<String, List<Double>>) input.readObject();
-            System.out.println(_neighborHERAMatrix.toString());
+            Log.d(TAG, "neighbor HERA matrix received: " + _neighborHERAMatrix.toString());
         } catch (Exception e) {
-            System.out.println("Reconstruct map exception" + e.fillInStackTrace());
+            Log.e(TAG,"Reconstruct map exception" + e.fillInStackTrace());
         }
     }
 
@@ -112,8 +115,11 @@ public class Connection {
         return _cache.toByteArray();
     }
 
-    public void buildMessage(MessageSystem mMessageSystem) {
+    public void buildMessage() {
         mMessageSystem.putMessage(getCacheByteArray());
+        Log.d(TAG, "Message built: " + new String(getCacheByteArray()));
+        Log.d(TAG, "Message System size: " + mMessageSystem.getMessageSystemSize());
+        mBLEHandler.updateMessageSystemUI();
     }
 
     public void setClientMTU(int mtu) {
@@ -171,9 +177,12 @@ public class Connection {
     }
 
     public String getOneToSendDestination() {
-        return _toSendQueue.poll();
+        return _toSendQueue.peek();
     }
 
+    public String toSendDestinationUpdate() {
+        return _toSendQueue.poll();
+    }
     public boolean isToSendQueueEmpty() {
         return _toSendQueue.isEmpty();
     }
@@ -183,10 +192,11 @@ public class Connection {
     }
 
     public long getLastConnectedTimeDiff() {
-        return System.currentTimeMillis() - _lastConnectedTime;
+        Log.d(TAG, "last connected time: "+ ((System.currentTimeMillis()/ 1000) - _lastConnectedTime));
+        return (System.currentTimeMillis() / 1000) - _lastConnectedTime;
     }
 
     public void updateLastConnectedTime() {
-        _lastConnectedTime = System.currentTimeMillis();
+        _lastConnectedTime = System.currentTimeMillis() / 1000;
     }
 }

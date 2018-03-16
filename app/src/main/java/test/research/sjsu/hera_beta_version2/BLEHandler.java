@@ -1,5 +1,6 @@
 package test.research.sjsu.hera_beta_version2;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -8,6 +9,7 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.os.ParcelUuid;
 import android.util.Log;
+import android.widget.TextView;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +17,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static test.research.sjsu.hera_beta_version2.MainActivity.mConnectionSystem;
+import static test.research.sjsu.hera_beta_version2.MainActivity.mHera;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mMessageSystem;
 
 /**
@@ -59,9 +62,7 @@ public class BLEHandler {
     private void prepareToSendMessage(Connection curConnection) {
         String dest = curConnection.getOneToSendDestination();
         Log.d(TAG, "Preparing to send message for: " + dest);
-        if (mMessageSystem.hasMessage(dest)) {
-            curConnection.setCurrentToSendPacket(mMessageSystem.getMessage(dest).getByte());
-        }
+        curConnection.setCurrentToSendPacket(mMessageSystem.getMessage(dest).getByte());
     }
 
 
@@ -73,13 +74,30 @@ public class BLEHandler {
             prepareToSendMessage(curConnection);
             BluetoothGattCharacteristic toSend = gatt.getService(mServiceUUID).getCharacteristic(mCharUUID);
             toSend.setValue(mConnectionSystem.getToSendFragment(gatt, 0, ConnectionSystem.DATA_TYPE_MESSAGE));
+
             gatt.writeCharacteristic(toSend);
         }
-        else {
-            Log.d(TAG, "Client gatt not found");
-            final String address = curConnection.getDevice().getAddress();
-            establishConnection(address);
-        }
+//        else {
+//            Log.d(TAG, "Client gatt not found");
+//            final String address = curConnection.getDevice().getAddress();
+//            establishConnection(address);
+//        }
+    }
+    public void updateMessageSystemUI() {
+        ((Activity)sContext).runOnUiThread(new Runnable() {
+            public void run() {
+                TextView messageStatus = (TextView)((Activity)sContext).findViewById(R.id.MessageSystemStatusUI);
+                messageStatus.setText(mMessageSystem.updateMessageSystemStatusUI());
+            }
+        });
+    }
+    public void updateHERAMatrixUI() {
+        ((Activity)sContext).runOnUiThread(new Runnable() {
+            public void run() {
+                TextView messageStatus = (TextView)((Activity)sContext).findViewById(R.id.HERAMatrixUI);
+                messageStatus.setText(mHera.getReachabilityMatrix().toString());
+            }
+        });
     }
 
     public void establishConnection (String address) {
@@ -95,6 +113,7 @@ public class BLEHandler {
         mBLEAdvertiser.prepareAdvertiseData();
         mBLEAdvertiser.prepareAdvertiseSettings();
         mBLEAdvertiser.startAdvertise();
+        updateMessageSystemUI();
     }
 
     private void initializeBLEScanner() {

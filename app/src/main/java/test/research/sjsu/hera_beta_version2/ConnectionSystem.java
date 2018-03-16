@@ -2,7 +2,6 @@ package test.research.sjsu.hera_beta_version2;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,7 +44,7 @@ public class ConnectionSystem {
         for (int i = 0; i < temp.size(); i++) {
             toSend[i] = temp.get(i);
         }
-        Log.d(TAG, "toSend fragment prepared");
+//        Log.d(TAG, "toSend fragment prepared");
         return toSend;
     }
 
@@ -67,7 +66,6 @@ public class ConnectionSystem {
         }
         else {
             androidIDConnectionMap.get(neighborAndroidID).setGatt(gatt);
-            androidIDConnectionMap.get(neighborAndroidID).updateLastConnectedTime();
         }
         deviceAndroidIDMap.put(gatt.getDevice(), neighborAndroidID);
     }

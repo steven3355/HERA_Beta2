@@ -1,7 +1,5 @@
 package test.research.sjsu.hera_beta_version2;
 
-import android.util.Log;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,6 +11,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static test.research.sjsu.hera_beta_version2.MainActivity.android_id;
+import static test.research.sjsu.hera_beta_version2.MainActivity.mBLEHandler;
 
 /**
  * Created by Steven on 3/13/2018.
@@ -24,13 +23,13 @@ public class HERA implements Serializable {
     static final double[] DEFAULT_LAMBDA = {1, .5, .05, .005, .0005};
     static final double[] DEFAULT_GAMMA = {1, .5, .05, .005, .0005};
     static final double DEFAULT_ALPHA = 0.98;
+    static final int DEFAULT_AGING_PERIOD = 10;
 
     private int H = 5;
     private double[] lambda = {1, 0.5, 0.05, 0.005, 0.0005},
             gamma = {1, 0.5, 0.05, 0.005, 0.0005};
     private double alpha = 0.98;
     private Map<String, List<Double>> reachabilityMatrix;
-    private String self = android_id;
     private static ScheduledExecutorService matrixAger = Executors.newSingleThreadScheduledExecutor();
     private int ageTime;
     private String TAG = "HERA";
@@ -39,29 +38,28 @@ public class HERA implements Serializable {
         lambda = DEFAULT_LAMBDA;
         gamma = DEFAULT_GAMMA;
         alpha = DEFAULT_ALPHA;
+        ageTime = DEFAULT_AGING_PERIOD;
         reachabilityMatrix = new HashMap<>();
-        ageTime = 10;
         matrixAger.scheduleWithFixedDelay(
                 new Runnable() {
                     @Override
                     public void run() {
                         ageMatrix();
-                        Log.d(TAG, "Hera matrix aged");
+//                        Log.d(TAG, "Hera matrix aged");
                     }
                 }
-                , 0, ageTime, TimeUnit.SECONDS
+                , 1, ageTime, TimeUnit.SECONDS
         );
     }
     public HERA(Map<String, List<Double>> neighborMatrix) {
         reachabilityMatrix = neighborMatrix;
     }
-    public HERA(int maxHop, double agingConstant, double[] intrinsicConfidence, double[] weight, int timeUnit, int agingTime, String selfAddress) {
+    public HERA(int maxHop, double agingConstant, double[] intrinsicConfidence, double[] weight, int agingTime, String selfAddress) {
         H = maxHop;
         alpha = agingConstant;
         lambda = intrinsicConfidence;
         gamma = weight;
         ageTime = agingTime;
-        self = selfAddress;
         reachabilityMatrix = new HashMap<>();
         matrixAger.scheduleWithFixedDelay(
                 new Runnable() {
@@ -92,7 +90,7 @@ public class HERA implements Serializable {
     public double getReachability(String dest) {
         double weightedSum = 0;
         if (!reachabilityMatrix.containsKey(dest)) {
-            reachabilityMatrix.put(dest, new ArrayList<>(Collections.nCopies(H, 0.0)));
+//            reachabilityMatrix.put(dest, new ArrayList<>(Collections.nCopies(H, 0.0)));
             return 0;
         }
         List<Double> hopReachabilities = reachabilityMatrix.get(dest);
@@ -110,10 +108,11 @@ public class HERA implements Serializable {
         else {
             reachabilityMatrix.get(neighbor).set(0 , reachabilityMatrix.get(neighbor).get(0) + 1);
         }
+        mBLEHandler.updateHERAMatrixUI();
     }
     public void updateTransitiveHops(String neighbor, Map<String, List<Double>> neighborMap) {
         for(Map.Entry<String, List<Double>> entry : neighborMap.entrySet()) {
-            if (entry.getKey().equals(self)) {
+            if (entry.getKey().equals(android_id)) {
                 continue;
             }
             if (!reachabilityMatrix.containsKey(entry.getKey())) {
@@ -126,15 +125,17 @@ public class HERA implements Serializable {
             }
             reachabilityMatrix.put(entry.getKey(), updateHopList);
         }
+        mBLEHandler.updateHERAMatrixUI();
     }
     private void ageMatrix() {
-        double multiplier = Math.pow(alpha, ageTime);
+        ;
         for (Map.Entry<String, List<Double>> entry :reachabilityMatrix.entrySet()) {
             List<Double> curList = entry.getValue();
             for (int i = 0; i < H; i++) {
-                curList.set(i, curList.get(i) * multiplier);
+                curList.set(i, curList.get(i) * alpha);
             }
             reachabilityMatrix.put(entry.getKey(), curList);
         }
+        mBLEHandler.updateHERAMatrixUI();
     }
 }
