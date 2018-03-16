@@ -90,8 +90,16 @@ public class BLEHandler {
     public void updateHERAMatrixUI() {
         ((Activity)sContext).runOnUiThread(new Runnable() {
             public void run() {
-                TextView messageStatus = (TextView)((Activity)sContext).findViewById(R.id.HERAMatrixUI);
-                messageStatus.setText(mHera.getReachabilityMatrix().toString());
+                StringBuilder matrixString = new StringBuilder();
+                for (Map.Entry<String, List<Double>> entry : mHera.getReachabilityMatrix().entrySet()) {
+                    matrixString.append(entry.getKey() + ": [");
+                    for (Double num : entry.getValue()) {
+                        matrixString.append(Math.round(num * 100.0) / 100.0 + ", ");
+                    }
+                    matrixString.replace(matrixString.length() - 2, matrixString.length(), "]\n");
+                }
+                TextView HERAStatus = (TextView)((Activity)sContext).findViewById(R.id.HERAMatrixUI);
+                HERAStatus.setText(matrixString.toString());
             }
         });
     }
@@ -124,6 +132,12 @@ public class BLEHandler {
     public void initilizeBLEServices() {
         if(!mBluetoothAdapter.isEnabled()) {
             mBluetoothAdapter.enable();
+            ((Activity)sContext).runOnUiThread(new Runnable() {
+                public void run() {
+                    TextView systemStatus = (TextView)((Activity)sContext).findViewById(R.id.HERAMatrixUI);
+                    systemStatus.setText("Turning on Bluetooth Adapter");
+                }
+            });
             try {
                 Thread.sleep(1000);
             }
