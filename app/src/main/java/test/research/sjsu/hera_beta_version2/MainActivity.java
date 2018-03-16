@@ -18,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
     static HERA mHera;
     static ConnectionSystem mConnectionSystem;
     static MessageSystem mMessageSystem;
-    String TAG = "MainActivity";
+    private String TAG = "MainActivity";
     static String android_id;
     private final int PERMISSION_REQUEST_CODE = 100;
     @Override

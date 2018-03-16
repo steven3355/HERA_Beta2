@@ -27,6 +27,23 @@ import static test.research.sjsu.hera_beta_version2.MainActivity.mMessageSystem;
 
 
 /**
+ * BLEClient
+ * Initializes connections between BLE devices and performs the following overheads for HERA Routing
+ * 1. Connection is established.
+ * 2. Performs a service discovery to determine the type of node of the other device (All of the HERA nodes would have the same serviceUUID, but the Bean+ end nodes would have another)
+ * 3a. If the other device is a Bean+ end node, performs read request to get stored data in the scratch memory of the Bean+ devices.
+ * 3b. If the other device is a HERA node (Android device), performs a read request on characteristicUUID 0x3001 on the connected device to get the other device's unique identifier
+ *     (Read more device unique identifiers in the MainActivity Class file)
+ * 4. Change the connection MTU (So we can reduce the number of fragments when transmitting larger frames)
+ * 5. Send our device's unique identifier (So the neighbor knows who we are, because the connections are pretty unidirectional)
+ * 6. Send a copy of our HERA reachability matrix (So the neighbor can update their own reachability matrix, and then they make the decision of whether to send some packets to us using the HERA routing scheme)
+ * 7. If we've already received the neighbor's reachability matrix through another asynchronous unidirectional connection
+ *    (in which the other device is the client), and we have already computed that we have messages to send to this other device, start the message transmitting process via characteristicWrite(See more in BLEHandler Class file)
+ * 8. We receive an acknowledgement for the characterWrite
+ * 9a. If the fragment we sent was not the last fragment, send next fragment
+ * 9b. If the fragment we sent was the last fragment, but there are more messages to send, send next message
+ * 9c. If the fragment we sent was the last fragment, and there are no more message to send, terminates the connection
+ *
  * Created by Steven on 3/13/2018.
  */
 
@@ -37,6 +54,12 @@ public class BLEClient {
     BLEClient(Context systemContext) {
         sContext = systemContext;
     }
+
+    /**
+     * Connect to a device
+     * We are running the process on the main thread to avoid potential problem
+     * @param device
+     */
     public synchronized void establishConnection(final BluetoothDevice device){
         if ((!connectionStatus.containsKey(device) || connectionStatus.get(device) == 0) && !connecting) {
             connecting = true;
@@ -57,6 +80,10 @@ public class BLEClient {
         Log.d(TAG, "Device " + gatt.getDevice().getAddress() + " disconnected.");
     }
 
+    /**
+     * Send our Android ID
+     * @param gatt
+     */
     private void sendAndroidID(BluetoothGatt gatt) {
         BluetoothGattCharacteristic toSendValue = gatt.getService(mServiceUUID).getCharacteristic(mAndroidIDCharUUID);
         toSendValue.setValue(android_id.getBytes());
@@ -64,6 +91,20 @@ public class BLEClient {
         gatt.writeCharacteristic(toSendValue);
     }
 
+    /**
+     * read neighbor's Android ID
+     * @param gatt
+     */
+    private void getNeighborAndroidID(BluetoothGatt gatt) {
+        gatt.readCharacteristic(gatt.getService(mServiceUUID).getCharacteristic(mAndroidIDCharUUID));
+    }
+
+    /**
+     * Stores a copy of the current HERA matrix
+     * Flatten the matrix to byte array to send
+     * Send the first fragment
+     * @param gatt
+     */
     private void sendHERAMatrix(BluetoothGatt gatt) {
         Connection curConnection = mConnectionSystem.getConnection(mConnectionSystem.getAndroidID(gatt.getDevice()));
         curConnection.setMyHERAMatrix(mHera.getReachabilityMatrix());
@@ -72,12 +113,17 @@ public class BLEClient {
         toSendValue.setValue(mConnectionSystem.getToSendFragment(gatt,0, ConnectionSystem.DATA_TYPE_MATRIX));
         gatt.writeCharacteristic(toSendValue);
     }
-    private void getNeighborAndroidID(BluetoothGatt gatt) {
-        gatt.readCharacteristic(gatt.getService(mServiceUUID).getCharacteristic(mAndroidIDCharUUID));
-    }
 
+    /**
+     * GattCallback
+     * determines what to do when we receive ACKs for our actions
+     */
     private BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         String TAG = "BluetoothGattCallBack";
+        /**
+         * When the connection state change to connect, start the service discovery process, update connection state map (See more in BLEHandler Class file)
+         * When the connection disconnects, update connection state map
+         */
         @Override
         public synchronized void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
@@ -87,12 +133,13 @@ public class BLEClient {
                 gatt.discoverServices();
             }
             else if(newState == BluetoothGatt.STATE_DISCONNECTED){
-                mBLEHandler.updateMessageSystemUI();
                 connectionStatus.put(gatt.getDevice(), 0);
-                gatt.close();
             }
         }
 
+        /**
+         * When service discovered, determines if the device is Bean+ end node or Android HERA node
+         */
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             Log.d(TAG,"Service discovered");
@@ -104,6 +151,10 @@ public class BLEClient {
             }
         }
 
+        /**
+         * onMtuChanged
+         * send our Android ID
+         */
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
             super.onMtuChanged(gatt, mtu, status);
@@ -113,6 +164,12 @@ public class BLEClient {
                 sendAndroidID(gatt);
             }
         }
+
+        /**
+         * onCharacteristicRead
+         * If neighbor device is Bean+, read all of the scratch memory
+         * If neighbor device is Android, continue with connection process, request an mtu change
+         */
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
@@ -140,6 +197,14 @@ public class BLEClient {
             }
         }
 
+        /**
+         * onCharacteristicWrite
+         * Determines what to send based on what the ACK says we sent
+         * If we sent Android ID, send HERA Matrix
+         * If we sent HERA Matrix, see if there is message to send
+         * If we sent message, check if last fragment
+         * If we sent last message, connection finished
+         */
 
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {

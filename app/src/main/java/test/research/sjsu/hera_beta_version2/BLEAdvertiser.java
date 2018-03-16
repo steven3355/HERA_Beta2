@@ -7,6 +7,8 @@ import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.util.Log;
 
 /**
+ * BLEAdvertiser
+ * Sends BLE Beacon class
  * Created by Steven on 3/13/2018.
  */
 

@@ -21,6 +21,9 @@ import static test.research.sjsu.hera_beta_version2.MainActivity.mHera;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mMessageSystem;
 
 /**
+ * BLE Handler
+ * Handles the instance(s) of BLEAdvertiser, BLEScanner, BLEServer, and BLEClient
+ *
  * Created by Steven on 3/13/2018.
  */
 
@@ -57,13 +60,20 @@ public class BLEHandler {
         mBLEClient = new BLEClient(sContext);
     }
 
+    /**
+     * build the message into byte array form for the current connection
+     * @param curConnection
+     */
     private void prepareToSendMessage(Connection curConnection) {
         String dest = curConnection.getOneToSendDestination();
         Log.d(TAG, "Preparing to send message for: " + dest);
         curConnection.setCurrentToSendPacket(mMessageSystem.getMessage(dest).getByte());
     }
 
-
+    /**
+     * if there is an instance of a gatt client for the current connection, builds and sends the first segment of the packet
+     * @param curConnection
+     */
     public void sendMessage(Connection curConnection) {
         String TAG = "sendMessage";
         BluetoothGatt gatt = curConnection.getGatt();
@@ -77,8 +87,11 @@ public class BLEHandler {
         else {
             transmitting = false;
         }
-
     }
+
+    /**
+     * updates the current state of the Message System on the UI
+     */
     public void updateMessageSystemUI() {
         ((Activity)sContext).runOnUiThread(new Runnable() {
             public void run() {
@@ -89,7 +102,7 @@ public class BLEHandler {
     }
 
     /**
-     * updates the HERA Matrix UI
+     * updates the current state of the HERA Matrix on the UI
      * seperates each entry by line
      * limit each number to two decimal points
      */
@@ -110,16 +123,26 @@ public class BLEHandler {
         });
     }
 
+    /**
+     * establish a connection given a temporary BLE address
+     * @param address
+     */
     public void establishConnection (String address) {
         BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         mBLEClient.establishConnection(device);
     }
 
+    /**
+     * Instantiate an BLEServer class
+     */
     private void initializeBLEGattServer() {
         mBLEServer = new BLEServer(mBluetoothManager, sContext);
         mBLEServer.startServer();
     }
 
+    /**
+     * Instantiate an BLEAdvertiser class
+     */
     private void initializeBLEAdvertiser() {
         mBLEAdvertiser = new BLEAdvertiser(mBluetoothAdapter.getBluetoothLeAdvertiser());
         mBLEAdvertiser.prepareAdvertiseData();
@@ -128,6 +151,9 @@ public class BLEHandler {
         updateMessageSystemUI();
     }
 
+    /**
+     * Instantiate an BLEScanner class
+     */
     private void initializeBLEScanner() {
         mBLEScanner = new BLEScanner(mBluetoothAdapter.getBluetoothLeScanner());
         mBLEScanner.prepareScanFilter();
@@ -135,6 +161,10 @@ public class BLEHandler {
         mBLEScanner.startScan();
     }
 
+    /**
+     * Check if Bluetooth Adapter is on before initializing BLE Advertiser, Scanner and Servers.
+     * if Bluetooth Adapter isn't on, turn it on
+     */
     public void initilizeBLEServices() {
         if(!mBluetoothAdapter.isEnabled()) {
             mBluetoothAdapter.enable();
@@ -156,19 +186,31 @@ public class BLEHandler {
         initializeBLEScanner();
     }
 
+    /**
+     * Stops the BLE GATT Server service
+     */
     private void terminateBLEGattServer() {
         mBLEServer.stopServer();
     }
 
+    /**
+     * Stops BLE advertisement
+     */
     private void terminateBLEAdvertiser() {
         mBLEAdvertiser.stopAdvertise();
     }
 
+    /**
+     * Stops BLE beacon scan and discovery
+     */
     private void terminateBLEScanner() {
         mBLEScanner.stopScan();
         mBluetoothAdapter.cancelDiscovery();
     }
 
+    /**
+     * Close gatt connection instance for all connected device
+     */
     private void terminateBLEClients() {
         List<Connection> connectionList = mConnectionSystem.getConnectionList();
         for (Connection connection : connectionList) {
@@ -178,6 +220,9 @@ public class BLEHandler {
         }
     }
 
+    /**
+     * Terminates all BLE services
+     */
     public void terminateBLEServices() {
         terminateBLEGattServer();
         terminateBLEAdvertiser();

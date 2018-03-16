@@ -10,7 +10,6 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-import static test.research.sjsu.hera_beta_version2.BLEHandler.connecting;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mBLEHandler;
 
 /**
@@ -67,9 +66,7 @@ public class BLEScanner {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             final String address = result.getDevice().getAddress();
-            if (!connecting) {
-                mBLEHandler.establishConnection(address);
-            }
+            mBLEHandler.establishConnection(address);
         }
     };
     public void stopScan() {
