@@ -87,6 +87,12 @@ public class BLEHandler {
             }
         });
     }
+
+    /**
+     * updates the HERA Matrix UI
+     * seperates each entry by line
+     * limit each number to two decimal points
+     */
     public void updateHERAMatrixUI() {
         ((Activity)sContext).runOnUiThread(new Runnable() {
             public void run() {
