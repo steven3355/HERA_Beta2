@@ -36,7 +36,7 @@ public class MessageSystem {
         messageMap.get(dest).add(new Message(dest, data));
     }
     boolean hasMessage(String dest) {
-        return getMessageQueue(dest) == null || !getMessageQueue(dest).isEmpty();
+        return getMessageQueue(dest) != null && !getMessageQueue(dest).isEmpty();
     }
     public Message getMessage(String dest) {
         return getMessageQueue(dest).peek();
@@ -46,6 +46,7 @@ public class MessageSystem {
         getMessageQueue(dest).remove();
         if (!hasMessage(dest)) {
             curConnection.toSendDestinationUpdate();
+            messageMap.remove(dest);
         }
     }
     List<String> getMessageDestinationList() {

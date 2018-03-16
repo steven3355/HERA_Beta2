@@ -181,7 +181,7 @@ public class Connection {
     }
 
     public String toSendDestinationUpdate() {
-        return _toSendQueue.poll();
+        return _toSendQueue.remove();
     }
     public boolean isToSendQueueEmpty() {
         return _toSendQueue.isEmpty();

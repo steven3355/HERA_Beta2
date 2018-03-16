@@ -106,6 +106,7 @@ public class BLEServer {
                         }
                         mMessageSystem.buildToSendMessageQueue(curConnection);
                         if (!curConnection.isToSendQueueEmpty()) {
+                            transmitting = true;
                             mBLEHandler.sendMessage(curConnection);
                         }
                         else {

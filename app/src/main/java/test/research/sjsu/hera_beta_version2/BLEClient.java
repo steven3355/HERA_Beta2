@@ -60,7 +60,7 @@ public class BLEClient {
     private void sendAndroidID(BluetoothGatt gatt) {
         BluetoothGattCharacteristic toSendValue = gatt.getService(mServiceUUID).getCharacteristic(mAndroidIDCharUUID);
         toSendValue.setValue(android_id.getBytes());
-        Log.d(TAG, "Sending Android ID: " + new String(toSendValue.getValue()));
+//        Log.d(TAG, "Sending Android ID: " + new String(toSendValue.getValue()));
         gatt.writeCharacteristic(toSendValue);
     }
 
@@ -150,7 +150,7 @@ public class BLEClient {
             int isLast = characteristic.getValue()[2];
 
             if (characteristic.getUuid().equals(mAndroidIDCharUUID)) {
-                Log.d(TAG, "Android ID sent, sending HERA Matrix");
+//                Log.d(TAG, "Android ID sent, sending HERA Matrix");
                 sendHERAMatrix(gatt);
                 return;
             }
@@ -164,6 +164,7 @@ public class BLEClient {
                     }
                     else {
                         curConnection.updateLastConnectedTime();
+                        transmitting = false;
                         gatt.disconnect();
                     }
                 }

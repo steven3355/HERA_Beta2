@@ -71,12 +71,14 @@ public class BLEHandler {
         String TAG = "toSend";
         BluetoothGatt gatt = curConnection.getGatt();
         if (gatt != null) {
-            transmitting = true;
             Log.d(TAG, "client gatt found, sending message");
             prepareToSendMessage(curConnection);
             BluetoothGattCharacteristic toSend = gatt.getService(mServiceUUID).getCharacteristic(mCharUUID);
             toSend.setValue(mConnectionSystem.getToSendFragment(gatt, 0, ConnectionSystem.DATA_TYPE_MESSAGE));
             gatt.writeCharacteristic(toSend);
+        }
+        else {
+            transmitting = false;
         }
 
     }
