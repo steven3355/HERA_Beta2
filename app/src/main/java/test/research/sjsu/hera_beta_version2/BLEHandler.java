@@ -54,9 +54,6 @@ public class BLEHandler {
         connectionStatus = new HashMap<>();
         mBluetoothManager = (BluetoothManager) sContext.getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
-        mBLEAdvertiser = new BLEAdvertiser(mBluetoothAdapter.getBluetoothLeAdvertiser());
-        mBLEScanner = new BLEScanner(mBluetoothAdapter.getBluetoothLeScanner());
-        mBLEServer = new BLEServer(mBluetoothManager, sContext);
         mBLEClient = new BLEClient(sContext);
     }
 
@@ -68,7 +65,7 @@ public class BLEHandler {
 
 
     public void sendMessage(Connection curConnection) {
-        String TAG = "toSend";
+        String TAG = "sendMessage";
         BluetoothGatt gatt = curConnection.getGatt();
         if (gatt != null) {
             Log.d(TAG, "client gatt found, sending message");
@@ -105,10 +102,12 @@ public class BLEHandler {
     }
 
     private void initializeBLEGattServer() {
+        mBLEServer = new BLEServer(mBluetoothManager, sContext);
         mBLEServer.startServer();
     }
 
     private void initializeBLEAdvertiser() {
+        mBLEAdvertiser = new BLEAdvertiser(mBluetoothAdapter.getBluetoothLeAdvertiser());
         mBLEAdvertiser.prepareAdvertiseData();
         mBLEAdvertiser.prepareAdvertiseSettings();
         mBLEAdvertiser.startAdvertise();
@@ -116,12 +115,22 @@ public class BLEHandler {
     }
 
     private void initializeBLEScanner() {
+        mBLEScanner = new BLEScanner(mBluetoothAdapter.getBluetoothLeScanner());
         mBLEScanner.prepareScanFilter();
         mBLEScanner.prepareScanSetting();
         mBLEScanner.startScan();
     }
 
     public void initilizeBLEServices() {
+        if(!mBluetoothAdapter.isEnabled()) {
+            mBluetoothAdapter.enable();
+            try {
+                Thread.sleep(1000);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         initializeBLEGattServer();
         initializeBLEAdvertiser();
         initializeBLEScanner();
