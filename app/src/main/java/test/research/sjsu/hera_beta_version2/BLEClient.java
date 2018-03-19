@@ -24,6 +24,7 @@ import static test.research.sjsu.hera_beta_version2.MainActivity.mBLEHandler;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mConnectionSystem;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mHera;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mMessageSystem;
+import static test.research.sjsu.hera_beta_version2.MainActivity.mUiManager;
 
 
 /**
@@ -235,7 +236,7 @@ public class BLEClient {
                 }
                 if (dataType == ConnectionSystem.DATA_TYPE_MESSAGE) {
                     mMessageSystem.MessageAck(curConnection);
-                    mBLEHandler.updateMessageSystemUI();
+                    mUiManager.updateMessageSystemUI();
                     if (!curConnection.isToSendQueueEmpty()) {
                         Log.d(TAG, "Message delivered, sending next message");
                         mBLEHandler.sendMessage(curConnection);

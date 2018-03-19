@@ -20,6 +20,7 @@ import static test.research.sjsu.hera_beta_version2.MainActivity.mHera;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mMessageSystem;
 
 /**
+ *
  * Created by Steven on 3/13/2018.
  */
 
@@ -94,7 +95,7 @@ public class BLEServer {
                         curConnection.resetCache();
                         String neighborAndroidID = curConnection.getNeighborAndroidID();
                         mHera.updateDirectHop(neighborAndroidID);
-                        mHera.updateTransitiveHops(neighborAndroidID, curConnection.getNeighborHERAMatrix());
+                        mHera.updateTransitiveHops(curConnection.getNeighborHERAMatrix());
                         while(transmitting)
                         {
                             try {

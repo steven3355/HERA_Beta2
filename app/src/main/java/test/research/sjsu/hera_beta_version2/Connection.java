@@ -10,12 +10,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 
-import static test.research.sjsu.hera_beta_version2.MainActivity.mBLEHandler;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mMessageSystem;
+import static test.research.sjsu.hera_beta_version2.MainActivity.mUiManager;
 
 /**
  * Created by Steven on 3/13/2018.
@@ -27,8 +25,8 @@ public class Connection {
     private ByteArrayOutputStream _cache;
     private int _clientMTU;
     private int _Datasize;
-    private Map<String, List<Double>> _myHERAMatrix;
-    private Map<String, List<Double>> _neighborHERAMatrix;
+    private HERAMatrix _myHERAMatrix;
+    private HERAMatrix _neighborHERAMatrix;
     private byte[] toSendPacket;
     private int _totalSegmentCount;
     private Queue<String> _toSendQueue;
@@ -79,14 +77,14 @@ public class Connection {
             byte[] cacheByteArr = _cache.toByteArray();
             ByteArrayInputStream inputStream = new ByteArrayInputStream(cacheByteArr);
             input = new ObjectInputStream(inputStream);
-            _neighborHERAMatrix = (Map<String, List<Double>>) input.readObject();
-            Log.d(TAG, "neighbor HERA matrix received: " + _neighborHERAMatrix.toString());
+            _neighborHERAMatrix = (HERAMatrix) input.readObject();
+//            Log.d(TAG, "neighbor HERA matrix received: " + _neighborHERAMatrix.toString());
         } catch (Exception e) {
             Log.e(TAG,"Reconstruct map exception" + e.fillInStackTrace());
         }
     }
 
-    public Map<String, List<Double>> getNeighborHERAMatrix() {
+    public HERAMatrix getNeighborHERAMatrix() {
         return _neighborHERAMatrix;
     }
 
@@ -117,9 +115,9 @@ public class Connection {
 
     public void buildMessage() {
         mMessageSystem.putMessage(getCacheByteArray());
-        Log.d(TAG, "Message built: " + new String(getCacheByteArray()));
-        Log.d(TAG, "Message System size: " + mMessageSystem.getMessageSystemSize());
-        mBLEHandler.updateMessageSystemUI();
+//        Log.d(TAG, "Message built: " + new String(getCacheByteArray()));
+//        Log.d(TAG, "Message System size: " + mMessageSystem.getMessageSystemSize());
+        mUiManager.updateMessageSystemUI();
     }
 
     public void setClientMTU(int mtu) {
@@ -139,7 +137,7 @@ public class Connection {
         toSendPacket = androidID.getBytes();
         _totalSegmentCount = +toSendPacket.length / _Datasize + (toSendPacket.length % _Datasize == 0 ? 0 : 1);
     }
-    public void setMyHERAMatrix (Map<String, List<Double>> map)  {
+    public void setMyHERAMatrix (HERAMatrix map)  {
         _myHERAMatrix = map;
     }
     public void flattenMyHeraMatrix() {
@@ -159,8 +157,8 @@ public class Connection {
         toSendPacket = data;
         _totalSegmentCount = +toSendPacket.length / _Datasize + (toSendPacket.length % _Datasize == 0 ? 0 : 1);
     }
-    public Map<String, List<Double>> getMyHERAMatrix() {
-        Log.d(TAG, "getMyHERAMatrix: " + _myHERAMatrix);
+    public HERAMatrix getMyHERAMatrix() {
+//        Log.d(TAG, "getMyHERAMatrix: " + _myHERAMatrix);
         return _myHERAMatrix;
     }
 

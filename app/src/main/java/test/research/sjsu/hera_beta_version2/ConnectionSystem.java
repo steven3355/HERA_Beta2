@@ -17,16 +17,16 @@ public class ConnectionSystem {
     private Map<String, Connection> androidIDConnectionMap;
     private Map<BluetoothDevice, String> deviceAndroidIDMap;
     private String TAG = "ConnectionSystem";
-    public static final int DATA_TYPE_NAME = 0;
-    public static final int DATA_TYPE_MATRIX = 1;
-    public static final int DATA_TYPE_MESSAGE = 2;
+    static final int DATA_TYPE_NAME = 0;
+    static final int DATA_TYPE_MATRIX = 1;
+    static final int DATA_TYPE_MESSAGE = 2;
 
-    public ConnectionSystem() {
+    ConnectionSystem() {
         androidIDConnectionMap = new HashMap<>();
         deviceAndroidIDMap = new HashMap<>();
     }
 
-    public byte[] getToSendFragment(BluetoothGatt gatt, int fragmentSeq, int dataType) {
+    byte[] getToSendFragment(BluetoothGatt gatt, int fragmentSeq, int dataType) {
         String neighborAndroidID = getAndroidID(gatt.getDevice());
         Connection curConnection = getConnection(neighborAndroidID);
         int curConnectionDataSize = curConnection.getDatasize();
@@ -48,10 +48,10 @@ public class ConnectionSystem {
         return toSend;
     }
 
-    public String getAndroidID(BluetoothDevice device) {
+    String getAndroidID(BluetoothDevice device) {
         return deviceAndroidIDMap.get(device);
     }
-    public Connection getConnection(String androidID) {
+    Connection getConnection(String androidID) {
         if (androidIDConnectionMap.containsKey(androidID)) {
             return androidIDConnectionMap.get(androidID);
         }
@@ -60,7 +60,7 @@ public class ConnectionSystem {
         }
     }
 
-    public void updateConnection(String neighborAndroidID, BluetoothGatt gatt) {
+    void updateConnection(String neighborAndroidID, BluetoothGatt gatt) {
         if (!androidIDConnectionMap.containsKey(neighborAndroidID)) {
             androidIDConnectionMap.put(neighborAndroidID, new Connection(neighborAndroidID, gatt));
         }
@@ -70,7 +70,7 @@ public class ConnectionSystem {
         deviceAndroidIDMap.put(gatt.getDevice(), neighborAndroidID);
     }
 
-    public void updateConnection(String neighborAndroidID, BluetoothDevice device) {
+    void updateConnection(String neighborAndroidID, BluetoothDevice device) {
         if (!androidIDConnectionMap.containsKey(neighborAndroidID)) {
             androidIDConnectionMap.put(neighborAndroidID, new Connection(neighborAndroidID, device));
         }
@@ -79,13 +79,14 @@ public class ConnectionSystem {
         }
         deviceAndroidIDMap.put(device, neighborAndroidID);
     }
-    public boolean isBean(BluetoothGatt gatt) {
+
+    boolean isBean(BluetoothGatt gatt) {
         return gatt.getService(UUID.fromString("A495FF20-C5B1-4B44-B512-1370F02D74DE")) != null;
     }
-    public boolean isHERANode(BluetoothGatt gatt) {
+    boolean isHERANode(BluetoothGatt gatt) {
         return gatt.getService(BLEHandler.mServiceUUID) != null;
     }
-    public static String bytesToHex(byte[] bytes) {
+    static String bytesToHex(byte[] bytes) {
         char[] hexArray = "0123456789ABCDEF".toCharArray();
         char[] hexChars = new char[bytes.length * 2];
         for (int j = 0; j < bytes.length; j++ ) {
@@ -96,7 +97,7 @@ public class ConnectionSystem {
         return new String(hexChars);
     }
 
-    public List<Connection> getConnectionList() {
+    List<Connection> getConnectionList() {
         return new ArrayList<>(androidIDConnectionMap.values());
     }
 }

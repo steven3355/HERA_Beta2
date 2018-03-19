@@ -17,8 +17,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import static test.research.sjsu.hera_beta_version2.MainActivity.mConnectionSystem;
-import static test.research.sjsu.hera_beta_version2.MainActivity.mHera;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mMessageSystem;
+import static test.research.sjsu.hera_beta_version2.MainActivity.mUiManager;
 
 /**
  * BLE Handler
@@ -89,39 +89,14 @@ public class BLEHandler {
         }
     }
 
-    /**
-     * updates the current state of the Message System on the UI
-     */
-    public void updateMessageSystemUI() {
-        ((Activity)sContext).runOnUiThread(new Runnable() {
-            public void run() {
-                TextView messageStatus = (TextView)((Activity)sContext).findViewById(R.id.MessageSystemStatusUI);
-                messageStatus.setText(mMessageSystem.updateMessageSystemStatusUI());
-            }
-        });
-    }
+
 
     /**
      * updates the current state of the HERA Matrix on the UI
      * seperates each entry by line
      * limit each number to two decimal points
      */
-    public void updateHERAMatrixUI() {
-        ((Activity)sContext).runOnUiThread(new Runnable() {
-            public void run() {
-                StringBuilder matrixString = new StringBuilder();
-                for (Map.Entry<String, List<Double>> entry : mHera.getReachabilityMatrix().entrySet()) {
-                    matrixString.append(entry.getKey() + ": [");
-                    for (Double num : entry.getValue()) {
-                        matrixString.append(Math.round(num * 100.0) / 100.0 + ", ");
-                    }
-                    matrixString.replace(matrixString.length() - 2, matrixString.length(), "]\n");
-                }
-                TextView HERAStatus = (TextView)((Activity)sContext).findViewById(R.id.HERAMatrixUI);
-                HERAStatus.setText(matrixString.toString());
-            }
-        });
-    }
+
 
     /**
      * establish a connection given a temporary BLE address
@@ -148,7 +123,7 @@ public class BLEHandler {
         mBLEAdvertiser.prepareAdvertiseData();
         mBLEAdvertiser.prepareAdvertiseSettings();
         mBLEAdvertiser.startAdvertise();
-        updateMessageSystemUI();
+        mUiManager.updateMessageSystemUI();
     }
 
     /**

@@ -1,7 +1,5 @@
 package test.research.sjsu.hera_beta_version2;
 
-import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -11,6 +9,7 @@ import java.util.Map;
 import java.util.Queue;
 
 import static test.research.sjsu.hera_beta_version2.MainActivity.android_id;
+import static test.research.sjsu.hera_beta_version2.MainActivity.mHera;
 
 /**
  * Created by Steven on 3/13/2018.
@@ -54,8 +53,7 @@ public class MessageSystem {
     }
 
     public void buildToSendMessageQueue(Connection curConnection) {
-        HERA neighborHera = new HERA(curConnection.getNeighborHERAMatrix());
-        HERA myHera = new HERA(curConnection.getMyHERAMatrix());
+        HERAMatrix neighborHera = curConnection.getNeighborHERAMatrix();
         List<String> mMessageDestinationList = this.getMessageDestinationList();
 
         for (String dest : mMessageDestinationList) {
@@ -66,17 +64,7 @@ public class MessageSystem {
             if (dest.equals(android_id)) {
                 continue;
             }
-            double myReachability = myHera.getReachability(dest);
-            double neighborReachability = neighborHera.getReachability(dest);
-            if (curConnection.getNeighborAndroidID().equals(dest)) {
-                Log.d(TAG, "Neighbor " + dest + " is the destination");
-                curConnection.pushToSendQueue(dest);
-
-            }
-            else if (neighborReachability > myReachability) {
-                Log.d(TAG, "My reachability for destionation " + dest + " is " + myReachability);
-                Log.d(TAG, "Neighbor Reachability is " + neighborReachability);
-                Log.d(TAG, dest + " added to toSendQueue");
+            if (mHera.makeDecision(dest, neighborHera)) {
                 curConnection.pushToSendQueue(dest);
             }
         }
@@ -105,14 +93,7 @@ public class MessageSystem {
         return count;
     }
 
-    public String updateMessageSystemStatusUI() {
-        StringBuilder statusBuilder = new StringBuilder();
-        for(Map.Entry<String,Queue<Message>> entry : messageMap.entrySet()) {
-            statusBuilder.append(entry.getKey());
-            statusBuilder.append(": ");
-            statusBuilder.append(entry.getValue().size());
-            statusBuilder.append("\n");
-        }
-        return statusBuilder.toString();
+    Map<String, Queue<Message>> getMessageMap() {
+        return messageMap;
     }
 }

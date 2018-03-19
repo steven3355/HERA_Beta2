@@ -20,6 +20,7 @@ public class MainActivity extends AppCompatActivity {
     static MessageSystem mMessageSystem;
     private String TAG = "MainActivity";
     static String android_id;
+    static public UiManager mUiManager;
     private final int PERMISSION_REQUEST_CODE = 100;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
         android_id = Settings.Secure.getString(this.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
         mHera = new HERA();
+        mUiManager = new UiManager(this);
         mConnectionSystem = new ConnectionSystem();
         mMessageSystem = new MessageSystem();
         TextView name = (TextView) findViewById(R.id.androidIDUI);
