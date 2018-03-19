@@ -12,7 +12,10 @@ import static test.research.sjsu.hera_beta_version2.MainActivity.android_id;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mUiManager;
 
 /**
- *
+ * HERA
+ * HERA Routing Scheme
+ * See more at
+ * https://www.dropbox.com/s/vobgpj6lbmsft68/paper.pdf?dl=0
  * Created by Steven on 3/13/2018.
  */
 

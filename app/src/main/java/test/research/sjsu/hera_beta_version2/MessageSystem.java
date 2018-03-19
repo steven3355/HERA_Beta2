@@ -12,6 +12,8 @@ import static test.research.sjsu.hera_beta_version2.MainActivity.android_id;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mHera;
 
 /**
+ * MessageSystem
+ * Keeps track of all the message that this device has waiting to be sent
  * Created by Steven on 3/13/2018.
  */
 

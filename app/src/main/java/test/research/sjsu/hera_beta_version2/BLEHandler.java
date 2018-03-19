@@ -27,7 +27,7 @@ import static test.research.sjsu.hera_beta_version2.MainActivity.mUiManager;
  * Created by Steven on 3/13/2018.
  */
 
-public class BLEHandler {
+class BLEHandler {
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private BLEAdvertiser mBLEAdvertiser;
@@ -35,7 +35,7 @@ public class BLEHandler {
     private BLEServer mBLEServer;
     private BLEClient mBLEClient;
 
-    public static Map<BluetoothDevice, Integer> connectionStatus;
+    static Map<BluetoothDevice, Integer> connectionStatus;
 
     static final ParcelUuid mServiceUUIDParcel = ParcelUuid.fromString("00001830-0000-1000-8000-00805F9B34FB");
     static final ParcelUuid BeanServiceUUID = ParcelUuid.fromString("A495FF10-C5B1-4B44-B512-1370F02D74DE");
@@ -48,8 +48,8 @@ public class BLEHandler {
 
     static final int _mtu = 400;
     Context sContext;
-    public static boolean connecting = false;
-    public static boolean transmitting = false;
+    static boolean connecting = false;
+    static boolean transmitting = false;
 
     private String TAG = "BLEHandler";
     BLEHandler(Context systemContext) {
@@ -74,7 +74,7 @@ public class BLEHandler {
      * if there is an instance of a gatt client for the current connection, builds and sends the first segment of the packet
      * @param curConnection
      */
-    public void sendMessage(Connection curConnection) {
+    void sendMessage(Connection curConnection) {
         String TAG = "sendMessage";
         BluetoothGatt gatt = curConnection.getGatt();
         if (gatt != null) {
@@ -90,19 +90,11 @@ public class BLEHandler {
     }
 
 
-
-    /**
-     * updates the current state of the HERA Matrix on the UI
-     * seperates each entry by line
-     * limit each number to two decimal points
-     */
-
-
     /**
      * establish a connection given a temporary BLE address
      * @param address
      */
-    public void establishConnection (String address) {
+    void establishConnection (String address) {
         BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         mBLEClient.establishConnection(device);
     }
@@ -140,12 +132,12 @@ public class BLEHandler {
      * Check if Bluetooth Adapter is on before initializing BLE Advertiser, Scanner and Servers.
      * if Bluetooth Adapter isn't on, turn it on
      */
-    public void initilizeBLEServices() {
+    void initilizeBLEServices() {
         if(!mBluetoothAdapter.isEnabled()) {
             mBluetoothAdapter.enable();
             ((Activity)sContext).runOnUiThread(new Runnable() {
                 public void run() {
-                    TextView systemStatus = (TextView)((Activity)sContext).findViewById(R.id.HERAMatrixUI);
+                    TextView systemStatus = ((Activity)sContext).findViewById(R.id.HERAMatrixUI);
                     systemStatus.setText("Turning on Bluetooth Adapter");
                 }
             });
@@ -198,7 +190,7 @@ public class BLEHandler {
     /**
      * Terminates all BLE services
      */
-    public void terminateBLEServices() {
+    void terminateBLEServices() {
         terminateBLEGattServer();
         terminateBLEAdvertiser();
         terminateBLEScanner();

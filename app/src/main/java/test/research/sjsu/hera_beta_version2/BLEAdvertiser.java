@@ -12,7 +12,7 @@ import android.util.Log;
  * Created by Steven on 3/13/2018.
  */
 
-public class BLEAdvertiser {
+class BLEAdvertiser {
     private BluetoothLeAdvertiser mBluetoothLeAdvertiser;
     private AdvertiseData mAdvertiseData;
     private AdvertiseSettings mAdvertiseSettings;
@@ -22,7 +22,7 @@ public class BLEAdvertiser {
         mBluetoothLeAdvertiser = BLEAdvertiser;
     }
 
-    public void prepareAdvertiseData() {
+    void prepareAdvertiseData() {
         AdvertiseData.Builder mAdvertiseDataBuilder = new AdvertiseData.Builder();
         mAdvertiseDataBuilder.addServiceUuid(BLEHandler.mServiceUUIDParcel);
         mAdvertiseDataBuilder.setIncludeTxPowerLevel(true);
@@ -30,7 +30,7 @@ public class BLEAdvertiser {
         mAdvertiseData = mAdvertiseDataBuilder.build();
     }
 
-    public void prepareAdvertiseSettings() {
+    void prepareAdvertiseSettings() {
         AdvertiseSettings.Builder mAdvertiseSettingsBuilder = new AdvertiseSettings.Builder();
         mAdvertiseSettingsBuilder.setConnectable(true);
         mAdvertiseSettingsBuilder.setTimeout(0);
@@ -38,7 +38,7 @@ public class BLEAdvertiser {
         mAdvertiseSettings = mAdvertiseSettingsBuilder.build();
     }
 
-    public void startAdvertise() {
+    void startAdvertise() {
         if (mAdvertiseData == null || mAdvertiseSettings == null) {
             Log.d(TAG, "startAdvertise aborted");
             return;
@@ -47,7 +47,7 @@ public class BLEAdvertiser {
         Log.d(TAG, "Advertisement initiated");
     }
 
-    public void stopAdvertise() {
+    void stopAdvertise() {
         mBluetoothLeAdvertiser.stopAdvertising(mAdvertiseCallback);
         Log.d(TAG, "Advertisement terminated");
     }

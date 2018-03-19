@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Message
+ * Message class that stores the individual message packets
  * Created by Steven on 3/13/2018.
  */
 

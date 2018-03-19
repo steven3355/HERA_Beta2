@@ -1,19 +1,19 @@
 package test.research.sjsu.hera_beta_version2;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
+ * HERAMatrix
+ * HERA scheme's reachability matrix
  * Created by Steven on 3/19/2018.
  */
 
-public class HERAMatrix{
+public class HERAMatrix implements Serializable{
     private Map<String, List<Double>> _reachabilityMatrix;
-    HERAMatrix(Map<String, List<Double>> map) {
-        _reachabilityMatrix = map;
-    }
     HERAMatrix() {
         _reachabilityMatrix = new HashMap<>();
     }

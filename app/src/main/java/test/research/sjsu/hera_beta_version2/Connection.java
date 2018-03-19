@@ -16,10 +16,13 @@ import static test.research.sjsu.hera_beta_version2.MainActivity.mMessageSystem;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mUiManager;
 
 /**
+ * Connection
+ * Superclass that handles the BLE connections
+ * Attempt to combine the two unidirectional asynchronous BLE connections
  * Created by Steven on 3/13/2018.
  */
 
-public class Connection {
+class Connection {
     private BluetoothGatt _transmitterGatt;
     private BluetoothDevice _device;
     private ByteArrayOutputStream _cache;
@@ -35,7 +38,7 @@ public class Connection {
     private String neighborAndroidID;
     private long _lastConnectedTime = Integer.MIN_VALUE;
 
-    public Connection(String androidID, BluetoothGatt gatt) {
+    Connection(String androidID, BluetoothGatt gatt) {
         _transmitterGatt = gatt;
         _device = gatt.getDevice();
         neighborAndroidID = androidID;
@@ -45,25 +48,25 @@ public class Connection {
         _Datasize = _clientMTU - _connectionOverhead;
         _lastConnectedTime = System.currentTimeMillis() / 1000;
     }
-    public Connection(String androidID, BluetoothDevice device) {
+    Connection(String androidID, BluetoothDevice device) {
         _device = device;
         neighborAndroidID = androidID;
         _cache = new ByteArrayOutputStream();
         _toSendQueue = new LinkedList<>();
     }
 
-    public int getOverHeadSize() {
+    int getOverHeadSize() {
         return _connectionOverhead;
     }
 
-    public void setNeighborAndroidID() {
+    void setNeighborAndroidID() {
         neighborAndroidID = new String(_cache.toByteArray());
     }
-    public String getNeighborAndroidID() {
+    String getNeighborAndroidID() {
         return neighborAndroidID;
     }
 
-    public void writeToCache(byte[] input) {
+    void writeToCache(byte[] input) {
         try {
             _cache.write(input);
         } catch (IOException e) {
@@ -71,8 +74,8 @@ public class Connection {
         }
     }
 
-    public void buildNeighborHERAMatrix() {
-        ObjectInputStream input = null;
+    void buildNeighborHERAMatrix() {
+        ObjectInputStream input;
         try {
             byte[] cacheByteArr = _cache.toByteArray();
             ByteArrayInputStream inputStream = new ByteArrayInputStream(cacheByteArr);
@@ -84,63 +87,63 @@ public class Connection {
         }
     }
 
-    public HERAMatrix getNeighborHERAMatrix() {
+    HERAMatrix getNeighborHERAMatrix() {
         return _neighborHERAMatrix;
     }
 
-    public void resetCache() {
+    void resetCache() {
         _cache = new ByteArrayOutputStream();
     }
 
-    public void setDevice(BluetoothDevice device) {
+    void setDevice(BluetoothDevice device) {
         _device = device;
     }
 
-    public void setGatt(BluetoothGatt gatt) {
+    void setGatt(BluetoothGatt gatt) {
         _transmitterGatt = gatt;
         _device = gatt.getDevice();
     }
 
-    public BluetoothGatt getGatt() {
+    BluetoothGatt getGatt() {
         return _transmitterGatt;
     }
 
-    public BluetoothDevice getDevice() {
+    BluetoothDevice getDevice() {
         return _device;
     }
 
-    public byte[] getCacheByteArray() {
+    private byte[] getCacheByteArray() {
         return _cache.toByteArray();
     }
 
-    public void buildMessage() {
+    void buildMessage() {
         mMessageSystem.putMessage(getCacheByteArray());
 //        Log.d(TAG, "Message built: " + new String(getCacheByteArray()));
 //        Log.d(TAG, "Message System size: " + mMessageSystem.getMessageSystemSize());
         mUiManager.updateMessageSystemUI();
     }
 
-    public void setClientMTU(int mtu) {
+    void setClientMTU(int mtu) {
         this._clientMTU = 300;
         this._Datasize = _clientMTU - _connectionOverhead;
     }
 
-    public int getClientMTU() {
+    int getClientMTU() {
         return _clientMTU;
     }
 
-    public int getDatasize() {
+    int getDatasize() {
         return _Datasize;
     }
 
-    public void setMyAndroidID (String androidID){
+    void setMyAndroidID (String androidID){
         toSendPacket = androidID.getBytes();
         _totalSegmentCount = +toSendPacket.length / _Datasize + (toSendPacket.length % _Datasize == 0 ? 0 : 1);
     }
-    public void setMyHERAMatrix (HERAMatrix map)  {
+    void setMyHERAMatrix (HERAMatrix map)  {
         _myHERAMatrix = map;
     }
-    public void flattenMyHeraMatrix() {
+    void flattenMyHeraMatrix() {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(bos);
@@ -153,48 +156,48 @@ public class Connection {
             e.fillInStackTrace();
         }
     }
-    public void setCurrentToSendPacket(byte[] data) {
+    void setCurrentToSendPacket(byte[] data) {
         toSendPacket = data;
         _totalSegmentCount = +toSendPacket.length / _Datasize + (toSendPacket.length % _Datasize == 0 ? 0 : 1);
     }
-    public HERAMatrix getMyHERAMatrix() {
+    HERAMatrix getMyHERAMatrix() {
 //        Log.d(TAG, "getMyHERAMatrix: " + _myHERAMatrix);
         return _myHERAMatrix;
     }
 
-    public int getTotalSegmentCount() {
+    int getTotalSegmentCount() {
         return _totalSegmentCount;
     }
 
-    public byte[] getToSendPacket() {
+    byte[] getToSendPacket() {
         return toSendPacket;
     }
 
-    public Queue<String> getToSendQueue() {
+    Queue<String> getToSendQueue() {
         return _toSendQueue;
     }
 
-    public String getOneToSendDestination() {
+    String getOneToSendDestination() {
         return _toSendQueue.peek();
     }
 
-    public String toSendDestinationUpdate() {
-        return _toSendQueue.remove();
+    void toSendDestinationUpdate() {
+        _toSendQueue.remove();
     }
-    public boolean isToSendQueueEmpty() {
+    boolean isToSendQueueEmpty() {
         return _toSendQueue.isEmpty();
     }
 
-    public void pushToSendQueue(String dest) {
+    void pushToSendQueue(String dest) {
         _toSendQueue.add(dest);
     }
 
-    public long getLastConnectedTimeDiff() {
+    long getLastConnectedTimeDiff() {
         Log.d(TAG, "last connected time: "+ ((System.currentTimeMillis()/ 1000) - _lastConnectedTime));
         return (System.currentTimeMillis() / 1000) - _lastConnectedTime;
     }
 
-    public void updateLastConnectedTime() {
+    void updateLastConnectedTime() {
         _lastConnectedTime = System.currentTimeMillis() / 1000;
     }
 }

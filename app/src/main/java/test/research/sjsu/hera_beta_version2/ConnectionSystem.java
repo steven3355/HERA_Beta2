@@ -10,10 +10,12 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
+ * ConnectionSystem
+ * Handles and maps each connection to its Android unique ID
  * Created by Steven on 3/13/2018.
  */
 
-public class ConnectionSystem {
+class ConnectionSystem {
     private Map<String, Connection> androidIDConnectionMap;
     private Map<BluetoothDevice, String> deviceAndroidIDMap;
     private String TAG = "ConnectionSystem";

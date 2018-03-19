@@ -12,15 +12,22 @@ import static test.research.sjsu.hera_beta_version2.MainActivity.mHera;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mMessageSystem;
 
 /**
+ * UiManager
+ * Handles all Ui updates
  * Created by Steven on 3/19/2018.
  */
 
-public class UiManager {
-    Context sContext;
+class UiManager {
+    private Context sContext;
     UiManager(Context systemContext) {
         sContext = systemContext;
     }
 
+    /**
+     * updates the current state of the HERA Matrix on the UI
+     * seperates each entry by line
+     * limit each number to two decimal points
+     */
     void updateHERAMatrixUI() {
         ((Activity)sContext).runOnUiThread(new Runnable() {
             public void run() {
@@ -32,7 +39,7 @@ public class UiManager {
                     }
                     matrixString.replace(matrixString.length() - 2, matrixString.length(), "]\n");
                 }
-                TextView HERAStatus = (TextView)((Activity)sContext).findViewById(R.id.HERAMatrixUI);
+                TextView HERAStatus =((Activity)sContext).findViewById(R.id.HERAMatrixUI);
                 HERAStatus.setText(matrixString.toString());
             }
         });
@@ -53,7 +60,7 @@ public class UiManager {
         final String status = statusBuilder.toString();
         ((Activity)sContext).runOnUiThread(new Runnable() {
             public void run() {
-                TextView messageStatus = (TextView)((Activity)sContext).findViewById(R.id.MessageSystemStatusUI);
+                TextView messageStatus = ((Activity)sContext).findViewById(R.id.MessageSystemStatusUI);
                 messageStatus.setText(status);
             }
         });

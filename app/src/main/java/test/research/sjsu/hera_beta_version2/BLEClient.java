@@ -48,7 +48,7 @@ import static test.research.sjsu.hera_beta_version2.MainActivity.mUiManager;
  * Created by Steven on 3/13/2018.
  */
 
-public class BLEClient {
+class BLEClient {
 
     private Context sContext;
     private String TAG = "BLEClient";
@@ -61,7 +61,7 @@ public class BLEClient {
      * We are running the process on the main thread to avoid potential problem
      * @param device
      */
-    public synchronized void establishConnection(final BluetoothDevice device){
+    synchronized void establishConnection(final BluetoothDevice device){
         if ((!connectionStatus.containsKey(device) || connectionStatus.get(device) == 0) && !connecting) {
             connecting = true;
             connectionStatus.put(device, 1);
@@ -76,7 +76,7 @@ public class BLEClient {
             mainHandler.post(myRunnable);
         }
     }
-    public void disableConnection(BluetoothGatt gatt){
+    void disableConnection(BluetoothGatt gatt){
         gatt.close();
         Log.d(TAG, "Device " + gatt.getDevice().getAddress() + " disconnected.");
     }
