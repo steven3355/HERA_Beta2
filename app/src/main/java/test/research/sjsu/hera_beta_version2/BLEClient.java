@@ -128,13 +128,18 @@ class BLEClient {
         @Override
         public synchronized void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
-            connecting = false;
-            if(newState == BluetoothGatt.STATE_CONNECTED){
+            if (newState == BluetoothGatt.STATE_CONNECTED){
                 connectionStatus.put(gatt.getDevice(), 2);
+                connecting = false;
                 gatt.discoverServices();
             }
-            else if(newState == BluetoothGatt.STATE_DISCONNECTED){
+            else if (newState == BluetoothGatt.STATE_CONNECTING) {
+
+            }
+            else if (newState == BluetoothGatt.STATE_DISCONNECTED){
+                connecting = false;
                 connectionStatus.put(gatt.getDevice(), 0);
+                gatt.close();
             }
         }
 

@@ -66,7 +66,7 @@ public class MessageSystem {
             if (dest.equals(android_id)) {
                 continue;
             }
-            if (mHera.makeDecision(dest, neighborHera)) {
+            if (mHera.makeDecision(dest, neighborHera) || dest.equals(curConnection.getNeighborAndroidID())) {
                 curConnection.pushToSendQueue(dest);
             }
         }
