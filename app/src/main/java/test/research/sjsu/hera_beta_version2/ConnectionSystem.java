@@ -18,6 +18,7 @@ import java.util.UUID;
 class ConnectionSystem {
     private Map<String, Connection> androidIDConnectionMap;
     private Map<BluetoothDevice, String> deviceAndroidIDMap;
+    private Map<BluetoothGatt, String> gattAndroidIDMap;
     private String TAG = "ConnectionSystem";
     static final int DATA_TYPE_NAME = 0;
     static final int DATA_TYPE_MATRIX = 1;
@@ -26,10 +27,11 @@ class ConnectionSystem {
     ConnectionSystem() {
         androidIDConnectionMap = new HashMap<>();
         deviceAndroidIDMap = new HashMap<>();
+        gattAndroidIDMap = new HashMap<>();
     }
 
     byte[] getToSendFragment(BluetoothGatt gatt, int fragmentSeq, int dataType) {
-        String neighborAndroidID = getAndroidID(gatt.getDevice());
+        String neighborAndroidID = getAndroidID(gatt);
         Connection curConnection = getConnection(neighborAndroidID);
         int curConnectionDataSize = curConnection.getDatasize();
         int curConnectionSegmentCount = curConnection.getTotalSegmentCount();
@@ -53,6 +55,9 @@ class ConnectionSystem {
     String getAndroidID(BluetoothDevice device) {
         return deviceAndroidIDMap.get(device);
     }
+    String getAndroidID(BluetoothGatt gatt) {
+        return gattAndroidIDMap.get(gatt);
+    }
     Connection getConnection(String androidID) {
         if (androidIDConnectionMap.containsKey(androidID)) {
             return androidIDConnectionMap.get(androidID);
@@ -69,7 +74,7 @@ class ConnectionSystem {
         else {
             androidIDConnectionMap.get(neighborAndroidID).setGatt(gatt);
         }
-        deviceAndroidIDMap.put(gatt.getDevice(), neighborAndroidID);
+        gattAndroidIDMap.put(gatt, neighborAndroidID);
     }
 
     void updateConnection(String neighborAndroidID, BluetoothDevice device) {

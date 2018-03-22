@@ -26,6 +26,7 @@ public class HERA implements RoutingAlgorithm {
     static private final double[] DEFAULT_GAMMA = {1, .5, .05, .005, .0005};
     static private final double DEFAULT_ALPHA = 0.98;
     static private final int DEFAULT_AGING_PERIOD = 10;
+    static final int REACH_COOL_DOWN_PERIOD = 20;
 
     private int H = 5;
     private double[] lambda = {1, 0.5, 0.05, 0.005, 0.0005},

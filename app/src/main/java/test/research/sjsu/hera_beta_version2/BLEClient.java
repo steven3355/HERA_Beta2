@@ -107,7 +107,7 @@ class BLEClient {
      * @param gatt
      */
     private void sendHERAMatrix(BluetoothGatt gatt) {
-        Connection curConnection = mConnectionSystem.getConnection(mConnectionSystem.getAndroidID(gatt.getDevice()));
+        Connection curConnection = mConnectionSystem.getConnection(mConnectionSystem.getAndroidID(gatt));
         curConnection.setMyHERAMatrix(mHera.getReachabilityMatrix());
         curConnection.flattenMyHeraMatrix();
         BluetoothGattCharacteristic toSendValue = gatt.getService(mServiceUUID).getCharacteristic(mCharUUID);
@@ -139,7 +139,6 @@ class BLEClient {
             else if (newState == BluetoothGatt.STATE_DISCONNECTED){
                 connecting = false;
                 connectionStatus.put(gatt.getDevice(), 0);
-                gatt.close();
             }
         }
 
@@ -166,7 +165,7 @@ class BLEClient {
             super.onMtuChanged(gatt, mtu, status);
             if (status == BluetoothGatt.GATT_SUCCESS) {
 //                Log.d(TAG, "MTU changed with " + gatt.getDevice() + " to " + mtu);
-                mConnectionSystem.getConnection(mConnectionSystem.getAndroidID(gatt.getDevice())).setClientMTU(mtu);
+                mConnectionSystem.getConnection(mConnectionSystem.getAndroidID(gatt)).setClientMTU(mtu);
                 sendAndroidID(gatt);
             }
         }
@@ -190,16 +189,10 @@ class BLEClient {
             else if (mConnectionSystem.isHERANode(gatt)) {
                 String neighborAndroidID = characteristic.getStringValue(0);
                 Log.d(TAG, "neighbor Android ID: " + neighborAndroidID);
-                if (mConnectionSystem.getConnection(neighborAndroidID) == null || mConnectionSystem.getConnection(neighborAndroidID).getLastConnectedTimeDiff() >= 20   ) {
 
-                    mConnectionSystem.updateConnection(neighborAndroidID, gatt);
-                    gatt.requestMtu(BLEHandler._mtu);
-                    Log.d(TAG, "Requesting mtu change of " + BLEHandler._mtu);
-                }
-                else {
-                    Log.d(TAG, "Saw " + neighborAndroidID + " recently");
-                    gatt.disconnect();
-                }
+                mConnectionSystem.updateConnection(neighborAndroidID, gatt);
+                gatt.requestMtu(BLEHandler._mtu);
+                Log.d(TAG, "Requesting mtu change of " + BLEHandler._mtu);
             }
         }
 
@@ -219,13 +212,18 @@ class BLEClient {
             int dataType = characteristic.getValue()[0];
             int prevSegCount = characteristic.getValue()[1];
             int isLast = characteristic.getValue()[2];
-
+            String neighborAndroidID = mConnectionSystem.getAndroidID(gatt);
+            Connection curConnection = mConnectionSystem.getConnection(neighborAndroidID);
             if (characteristic.getUuid().equals(mAndroidIDCharUUID)) {
-//                Log.d(TAG, "Android ID sent, sending HERA Matrix");
-                sendHERAMatrix(gatt);
+                if (mConnectionSystem.getConnection(neighborAndroidID).getLastConnectedTimeDiff() >= HERA.REACH_COOL_DOWN_PERIOD) {
+                    curConnection.updateLastConnectedTime();
+                    sendHERAMatrix(gatt);
+                }
+                else if (!curConnection.isToSendQueueEmpty()){
+                    mBLEHandler.sendMessage(curConnection);
+                }
                 return;
             }
-            Connection curConnection = mConnectionSystem.getConnection(mConnectionSystem.getAndroidID(gatt.getDevice()));
             if(isLast == 0) {
                 Log.d(TAG, "All " + (prevSegCount + 1) + " segments have been transmitted");
                 if (dataType == ConnectionSystem.DATA_TYPE_MATRIX) {
@@ -234,7 +232,6 @@ class BLEClient {
                         mBLEHandler.sendMessage(curConnection);
                     }
                     else {
-                        curConnection.updateLastConnectedTime();
                         transmitting = false;
                         gatt.disconnect();
                     }
@@ -248,7 +245,6 @@ class BLEClient {
                     }
                     else {
                         Log.d(TAG, "All messages have been transmitted, the connection will now terminate");
-                        curConnection.updateLastConnectedTime();
                         transmitting = false;
                         gatt.disconnect();
                     }
