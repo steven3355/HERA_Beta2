@@ -255,6 +255,7 @@ class BLEClient {
                     }
                 }
             }
+            /*Not the last fragment to the current packet, send next fragment*/
             else {
                 BluetoothGattCharacteristic segmentToSend = gatt.getService(mServiceUUID).getCharacteristic(mCharUUID);
                 segmentToSend.setValue(mConnectionSystem.getToSendFragment(gatt, prevSegCount + 1, ConnectionSystem.DATA_TYPE_MATRIX));
