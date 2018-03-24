@@ -33,6 +33,7 @@ class BLEAdvertiser {
     void prepareAdvertiseSettings() {
         AdvertiseSettings.Builder mAdvertiseSettingsBuilder = new AdvertiseSettings.Builder();
         mAdvertiseSettingsBuilder.setConnectable(true);
+        mAdvertiseSettingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER);
         mAdvertiseSettingsBuilder.setTimeout(0);
         mAdvertiseSettingsBuilder.setTxPowerLevel(3);
         mAdvertiseSettings = mAdvertiseSettingsBuilder.build();

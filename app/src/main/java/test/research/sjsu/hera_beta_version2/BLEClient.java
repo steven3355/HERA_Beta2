@@ -70,7 +70,7 @@ class BLEClient {
             Runnable myRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    device.connectGatt(sContext, false, mGattCallback, 2);
+                    device.connectGatt(sContext, false, mGattCallback, BluetoothDevice.TRANSPORT_LE);
                 }
             };
             mainHandler.post(myRunnable);
@@ -143,6 +143,7 @@ class BLEClient {
         }
 
         /**
+         * onServiceDiscovered
          * When service discovered, determines if the device is Bean+ end node or Android HERA node
          */
         @Override
@@ -214,6 +215,9 @@ class BLEClient {
             int isLast = characteristic.getValue()[2];
             String neighborAndroidID = mConnectionSystem.getAndroidID(gatt);
             Connection curConnection = mConnectionSystem.getConnection(neighborAndroidID);
+            /*if we completed the first step of our handshake process, which is send device android ID,
+            * then depending on when the last HERA matrix was formed with the neighboring device,
+            * we'll decide if we want to send HERA matrix again or just check our to send queue.*/
             if (characteristic.getUuid().equals(mAndroidIDCharUUID)) {
                 if (mConnectionSystem.getConnection(neighborAndroidID).getLastConnectedTimeDiff() >= HERA.REACH_COOL_DOWN_PERIOD) {
                     curConnection.updateLastConnectedTime();
@@ -224,6 +228,7 @@ class BLEClient {
                 }
                 return;
             }
+            /*if we finished sending the current packet, we then decide what to do next, if we have something more to send, keep sending, if not, terminate the connection*/
             if(isLast == 0) {
                 Log.d(TAG, "All " + (prevSegCount + 1) + " segments have been transmitted");
                 if (dataType == ConnectionSystem.DATA_TYPE_MATRIX) {

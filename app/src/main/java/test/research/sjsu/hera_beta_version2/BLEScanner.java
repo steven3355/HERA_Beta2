@@ -40,7 +40,7 @@ public class BLEScanner {
 
     public void prepareScanSetting(){
         ScanSettings.Builder mScanSettingsBuilder = new ScanSettings.Builder();
-        mScanSettingsBuilder.setScanMode(1);
+        mScanSettingsBuilder.setScanMode(2);
         Log.d(TAG, "Scan Setting prepared");
         mScanSettings = mScanSettingsBuilder.build();
     }
@@ -55,7 +55,7 @@ public class BLEScanner {
             return;
         }
         if (mScanSettings == null) {
-            Log.d(TAG, "Cannt get scan settings, scan aborted");
+            Log.d(TAG, "Cannot get scan settings, scan aborted");
             return;
         }
         mBluetoothLeScanner.startScan(mScanFilterList, mScanSettings, mScanCallback);
