@@ -39,10 +39,10 @@ public class MessageSystem {
     boolean hasMessage(String dest) {
         return getMessageQueue(dest) != null && !getMessageQueue(dest).isEmpty();
     }
-    public Message getMessage(String dest) {
+    Message getMessage(String dest) {
         return getMessageQueue(dest).peek();
     }
-    public void  MessageAck(Connection curConnection) {
+    void  MessageAck(Connection curConnection) {
         String dest = curConnection.getOneToSendDestination();
         getMessageQueue(dest).remove();
         if (!hasMessage(dest)) {
@@ -54,7 +54,7 @@ public class MessageSystem {
         return new ArrayList<>(messageMap.keySet());
     }
 
-    public void buildToSendMessageQueue(Connection curConnection) {
+    void buildToSendMessageQueue(Connection curConnection) {
         HERAMatrix neighborHera = curConnection.getNeighborHERAMatrix();
         List<String> mMessageDestinationList = this.getMessageDestinationList();
 
@@ -71,13 +71,13 @@ public class MessageSystem {
             }
         }
     }
-    public void generateTestMessage(String dest, int count) {
+    void generateTestMessage(String dest, int count) {
         messageMap.put(dest, new LinkedList<Message>());
         for (int i = 0; i < count; i++) {
             messageMap.get(dest).add(new Message(dest, ("this is test message #" + i).getBytes()));
         }
     }
-    public void generateTestMessageForClients() {
+    void generateTestMessageForClients() {
         switch(android_id) {
             case "8ab5e5cf2db6867a":
                 generateTestMessage("a1417d377e1333ac", 10);
@@ -87,7 +87,7 @@ public class MessageSystem {
                 break;
         }
     }
-    public int getMessageSystemSize() {
+    int getMessageSystemSize() {
         int count = 0;
         for (String dest : getMessageDestinationList()) {
             count += messageMap.get(dest).size();

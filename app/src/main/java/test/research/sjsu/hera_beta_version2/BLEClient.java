@@ -11,20 +11,8 @@ import android.util.Log;
 
 import java.util.UUID;
 
-import static test.research.sjsu.hera_beta_version2.BLEHandler.BeanScratchFirstCharUUID;
-import static test.research.sjsu.hera_beta_version2.BLEHandler.BeanScratchServiceUUID;
-import static test.research.sjsu.hera_beta_version2.BLEHandler.connecting;
-import static test.research.sjsu.hera_beta_version2.BLEHandler.connectionStatus;
-import static test.research.sjsu.hera_beta_version2.BLEHandler.mAndroidIDCharUUID;
-import static test.research.sjsu.hera_beta_version2.BLEHandler.mCharUUID;
-import static test.research.sjsu.hera_beta_version2.BLEHandler.mServiceUUID;
-import static test.research.sjsu.hera_beta_version2.BLEHandler.transmitting;
-import static test.research.sjsu.hera_beta_version2.MainActivity.android_id;
-import static test.research.sjsu.hera_beta_version2.MainActivity.mBLEHandler;
-import static test.research.sjsu.hera_beta_version2.MainActivity.mConnectionSystem;
-import static test.research.sjsu.hera_beta_version2.MainActivity.mHera;
-import static test.research.sjsu.hera_beta_version2.MainActivity.mMessageSystem;
-import static test.research.sjsu.hera_beta_version2.MainActivity.mUiManager;
+import static test.research.sjsu.hera_beta_version2.BLEHandler.*;
+import static test.research.sjsu.hera_beta_version2.MainActivity.*;
 
 
 /**
@@ -61,7 +49,7 @@ class BLEClient {
      * We are running the process on the main thread to avoid potential problem
      * @param device
      */
-    synchronized void establishConnection(final BluetoothDevice device){
+    void establishConnection(final BluetoothDevice device){
         if ((!connectionStatus.containsKey(device) || connectionStatus.get(device) == 0) && !connecting) {
             connecting = true;
             connectionStatus.put(device, 1);

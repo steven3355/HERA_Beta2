@@ -58,9 +58,6 @@ class Connection {
         return _connectionOverhead;
     }
 
-    void setNeighborAndroidID() {
-        neighborAndroidID = new String(_cache.toByteArray());
-    }
     String getNeighborAndroidID() {
         return neighborAndroidID;
     }
@@ -106,9 +103,6 @@ class Connection {
         return _gatt;
     }
 
-    BluetoothDevice getDevice() {
-        return _device;
-    }
 
     private byte[] getCacheByteArray() {
         return _cache.toByteArray();
@@ -126,18 +120,12 @@ class Connection {
         this._Datasize = _clientMTU - _connectionOverhead;
     }
 
-    int getClientMTU() {
-        return _clientMTU;
-    }
 
     int getDatasize() {
         return _Datasize;
     }
 
-    void setMyAndroidID (String androidID){
-        toSendPacket = androidID.getBytes();
-        _totalSegmentCount = +toSendPacket.length / _Datasize + (toSendPacket.length % _Datasize == 0 ? 0 : 1);
-    }
+
     void setMyHERAMatrix (HERAMatrix map)  {
         _myHERAMatrix = map;
     }
