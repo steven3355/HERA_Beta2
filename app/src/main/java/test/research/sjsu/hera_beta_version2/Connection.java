@@ -77,7 +77,6 @@ class Connection {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(cacheByteArr);
             input = new ObjectInputStream(inputStream);
             _neighborHERAMatrix = (HERAMatrix) input.readObject();
-//            Log.d(TAG, "neighbor HERA matrix received: " + _neighborHERAMatrix.toString());
         } catch (Exception e) {
             Log.e(TAG,"Reconstruct map exception" + e.fillInStackTrace());
         }
@@ -108,10 +107,8 @@ class Connection {
         return _cache.toByteArray();
     }
 
-    void buildMessage() {
-        mMessageSystem.putMessage(getCacheByteArray());
-//        Log.d(TAG, "Message built: " + new String(getCacheByteArray()));
-//        Log.d(TAG, "Message System size: " + mMessageSystem.getMessageSystemSize());
+    void buildMessage(int destinationLength) {
+        mMessageSystem.putMessage(getCacheByteArray(), destinationLength);
         mUiManager.updateMessageSystemUI();
     }
 

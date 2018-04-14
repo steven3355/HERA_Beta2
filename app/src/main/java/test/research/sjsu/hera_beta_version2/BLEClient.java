@@ -11,8 +11,20 @@ import android.util.Log;
 
 import java.util.UUID;
 
-import static test.research.sjsu.hera_beta_version2.BLEHandler.*;
-import static test.research.sjsu.hera_beta_version2.MainActivity.*;
+import static test.research.sjsu.hera_beta_version2.BLEHandler.BeanScratchFirstCharUUID;
+import static test.research.sjsu.hera_beta_version2.BLEHandler.BeanScratchServiceUUID;
+import static test.research.sjsu.hera_beta_version2.BLEHandler.connecting;
+import static test.research.sjsu.hera_beta_version2.BLEHandler.connectionStatus;
+import static test.research.sjsu.hera_beta_version2.BLEHandler.mAndroidIDCharUUID;
+import static test.research.sjsu.hera_beta_version2.BLEHandler.mCharUUID;
+import static test.research.sjsu.hera_beta_version2.BLEHandler.mServiceUUID;
+import static test.research.sjsu.hera_beta_version2.BLEHandler.transmitting;
+import static test.research.sjsu.hera_beta_version2.MainActivity.android_id;
+import static test.research.sjsu.hera_beta_version2.MainActivity.mBLEHandler;
+import static test.research.sjsu.hera_beta_version2.MainActivity.mConnectionSystem;
+import static test.research.sjsu.hera_beta_version2.MainActivity.mHera;
+import static test.research.sjsu.hera_beta_version2.MainActivity.mMessageSystem;
+import static test.research.sjsu.hera_beta_version2.MainActivity.mUiManager;
 
 
 /**
@@ -138,7 +150,24 @@ class BLEClient {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             Log.d(TAG,"Service discovered");
             if (mConnectionSystem.isBean(gatt)) {
-                gatt.readCharacteristic(gatt.getService(BeanScratchServiceUUID).getCharacteristic(BeanScratchFirstCharUUID));
+                mConnectionSystem.updateConnection(gatt.getDevice().getAddress(), gatt);
+                Connection curConnection = mConnectionSystem.getConnection(gatt.getDevice().getAddress());
+                if (mConnectionSystem.isStartBean(gatt)) {
+                    if (curConnection.getLastConnectedTimeDiff() >= HERA.REACH_COOL_DOWN_PERIOD) {
+                        gatt.readCharacteristic(gatt.getService(BeanScratchServiceUUID).getCharacteristic(BeanScratchFirstCharUUID));
+                    }
+                    else {
+                        gatt.disconnect();
+                    }
+                }
+                else if (mConnectionSystem.isEndBean(gatt)) {
+                    if (mMessageSystem.hasMessage("987bf3583813")) {
+                        mBLEHandler.sendMessageToEnd(gatt);
+                    }
+                    else {
+                        gatt.disconnect();
+                    }
+                }
             }
             else if (mConnectionSystem.isHERANode(gatt)) {
                 getNeighborAndroidID(gatt);
@@ -169,11 +198,23 @@ class BLEClient {
             super.onCharacteristicRead(gatt, characteristic, status);
             String TAG = "CharacteristicRead";
             if (mConnectionSystem.isBean(gatt)) {
+                Connection curConnection = mConnectionSystem.getConnection(gatt.getDevice().getAddress());
                 int scratchNumber = Integer.valueOf(characteristic.getUuid().toString().substring(7, 8));
                 System.out.println("Scratch " + scratchNumber + " read");
                 System.out.println(ConnectionSystem.bytesToHex(characteristic.getValue()));
-                if (scratchNumber < 5)
+                if (scratchNumber == 1) {
+                    curConnection.writeToCache("987bf3583813".getBytes());
+                }
+                if (scratchNumber < 5) {
+                    curConnection.writeToCache(characteristic.getValue());
                     gatt.readCharacteristic(gatt.getService(BeanScratchServiceUUID).getCharacteristic(UUID.fromString("A495FF2" + String.valueOf(scratchNumber + 1) + "-C5B1-4B44-B512-1370F02D74DE")));
+                }
+                else if (scratchNumber == 5) {
+                    curConnection.buildMessage(12);
+                    curConnection.resetCache();
+                    curConnection.updateLastConnectedTime();
+                    gatt.disconnect();
+                }
             }
             else if (mConnectionSystem.isHERANode(gatt)) {
                 String neighborAndroidID = characteristic.getStringValue(0);
@@ -217,7 +258,7 @@ class BLEClient {
                 return;
             }
             /*if we finished sending the current packet, we then decide what to do next, if we have something more to send, keep sending, if not, terminate the connection*/
-            if(isLast == 0) {
+            if(characteristic.getUuid().equals(mCharUUID) && isLast == 0) {
                 Log.d(TAG, "All " + (prevSegCount + 1) + " segments have been transmitted");
                 if (dataType == ConnectionSystem.DATA_TYPE_MATRIX) {
                     if (!curConnection.isToSendQueueEmpty()) {
@@ -244,11 +285,27 @@ class BLEClient {
                 }
             }
             /*Not the last fragment to the current packet, send next fragment*/
-            else {
+            else if (characteristic.getUuid().equals(mCharUUID) && isLast != 0){
                 BluetoothGattCharacteristic segmentToSend = gatt.getService(mServiceUUID).getCharacteristic(mCharUUID);
                 segmentToSend.setValue(mConnectionSystem.getToSendFragment(gatt, prevSegCount + 1, ConnectionSystem.DATA_TYPE_MATRIX));
                 gatt.writeCharacteristic(segmentToSend);
                 Log.d(TAG, "Fragment " + (prevSegCount + 1) + " sent");
+            }
+            else if (mConnectionSystem.isBean(gatt)) {
+                int scratchNumber = Integer.valueOf(characteristic.getUuid().toString().substring(7, 8));
+                if (scratchNumber < 5) {
+                    BluetoothGattCharacteristic toSend = gatt.getService(BeanScratchServiceUUID).getCharacteristic(UUID.fromString("A495FF2" + String.valueOf(scratchNumber + 1) + "-C5B1-4B44-B512-1370F02D74DE"));
+                    Log.d(TAG, ConnectionSystem.bytesToHex(characteristic.getValue()));
+                }
+                else if (scratchNumber == 5) {
+                    mMessageSystem.getMessageQueue("987bf3583813").remove();
+                    if(mMessageSystem.hasMessage("987bf3583813")) {
+                        mBLEHandler.sendMessageToEnd(gatt);
+                    }
+                    else {
+                        gatt.disconnect();
+                    }
+                }
             }
         }
     };

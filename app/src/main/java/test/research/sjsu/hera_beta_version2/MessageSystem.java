@@ -1,5 +1,6 @@
 package test.research.sjsu.hera_beta_version2;
 
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -19,6 +20,7 @@ import static test.research.sjsu.hera_beta_version2.MainActivity.mHera;
 
 public class MessageSystem {
     private Map<String, Queue<Message>> messageMap;
+    private ByteArrayInputStream messageCache;
     private static String TAG = "MessageSystem";
     MessageSystem() {
         messageMap = new HashMap<>();
@@ -28,9 +30,9 @@ public class MessageSystem {
     Queue<Message> getMessageQueue(String dest) {
         return messageMap.get(dest);
     }
-    void putMessage(byte[] input) {
-        String dest = new String(Arrays.copyOfRange(input, 0, 16));
-        byte[] data = Arrays.copyOfRange(input, 16, input.length);
+    void putMessage(byte[] input, int destinationLength) {
+        String dest = new String(Arrays.copyOfRange(input, 0, destinationLength));
+        byte[] data = Arrays.copyOfRange(input, destinationLength, input.length);
         if (!messageMap.containsKey(dest)) {
             messageMap.put(dest, new LinkedList<Message>());
         }

@@ -11,6 +11,7 @@ import android.os.ParcelUuid;
 import android.util.Log;
 import android.widget.TextView;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,7 +90,12 @@ class BLEHandler {
         }
     }
 
-
+    void sendMessageToEnd(BluetoothGatt gatt) {
+        String TAG = "sendMessageToEnd";
+        BluetoothGattCharacteristic toSend = gatt.getService(BeanScratchServiceUUID).getCharacteristic(BeanScratchFirstCharUUID);
+        toSend.setValue(Arrays.copyOfRange(mMessageSystem.getMessage("987bf3583813").getData(), 0, 4));
+        gatt.writeCharacteristic(toSend);
+    }
     /**
      * establish a connection given a temporary BLE address
      * @param address

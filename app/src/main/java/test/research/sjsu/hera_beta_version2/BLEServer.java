@@ -114,7 +114,7 @@ public class BLEServer {
                             Log.d(TAG, "No message to send");
                         }
                     } else if (dataType == ConnectionSystem.DATA_TYPE_MESSAGE) {
-                        curConnection.buildMessage();
+                        curConnection.buildMessage(16);
                         curConnection.resetCache();
                     }
                 }

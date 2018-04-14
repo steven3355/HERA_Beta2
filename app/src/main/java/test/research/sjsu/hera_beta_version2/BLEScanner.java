@@ -66,6 +66,8 @@ public class BLEScanner {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             final String address = result.getDevice().getAddress();
+//            Connection curConnection = mConnectionSystem.getConnection(address);
+//            if (curConnection == null || curConnection.getLastConnectedTimeDiff() >= HERA.REACH_COOL_DOWN_PERIOD)
             mBLEHandler.establishConnection(address);
         }
     };

@@ -90,6 +90,14 @@ class ConnectionSystem {
     boolean isBean(BluetoothGatt gatt) {
         return gatt.getService(UUID.fromString("A495FF20-C5B1-4B44-B512-1370F02D74DE")) != null;
     }
+
+    boolean isStartBean(BluetoothGatt gatt) {
+        return gatt.getDevice().getAddress().equalsIgnoreCase("98:7b:f3:58:39:99");
+    }
+
+    boolean isEndBean(BluetoothGatt gatt) {
+        return gatt.getDevice().getAddress().equalsIgnoreCase("98:7b:f3:58:38:13");
+    }
     boolean isHERANode(BluetoothGatt gatt) {
         return gatt.getService(BLEHandler.mServiceUUID) != null;
     }
