@@ -71,6 +71,7 @@ class ConnectionSystem {
         if (!androidIDConnectionMap.containsKey(neighborAndroidID)) {
             androidIDConnectionMap.put(neighborAndroidID, new Connection(neighborAndroidID, gatt));
         }
+
         else {
             androidIDConnectionMap.get(neighborAndroidID).setGatt(gatt);
         }
@@ -93,9 +94,11 @@ class ConnectionSystem {
 
     boolean isStartBean(BluetoothGatt gatt) {
         return gatt.getDevice().getAddress().equalsIgnoreCase("98:7b:f3:58:39:99");
+//        return gatt.getDevice().getAddress().equalsIgnoreCase("98:7b:f3:58:38:13");
     }
 
     boolean isEndBean(BluetoothGatt gatt) {
+//        return gatt.getDevice().getAddress().equalsIgnoreCase("98:7b:f3:58:39:99");
         return gatt.getDevice().getAddress().equalsIgnoreCase("98:7b:f3:58:38:13");
     }
     boolean isHERANode(BluetoothGatt gatt) {

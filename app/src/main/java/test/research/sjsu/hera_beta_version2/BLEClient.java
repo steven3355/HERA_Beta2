@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 import static test.research.sjsu.hera_beta_version2.BLEHandler.BeanScratchFirstCharUUID;
@@ -32,18 +33,21 @@ import static test.research.sjsu.hera_beta_version2.MainActivity.mUiManager;
  * Initializes connections between BLE devices and performs the following overheads for HERA Routing
  * 1. Connection is established.
  * 2. Performs a service discovery to determine the type of node of the other device (All of the HERA nodes would have the same serviceUUID, but the Bean+ end nodes would have another)
- * 3a. If the other device is a Bean+ end node, performs read request to get stored data in the scratch memory of the Bean+ devices.
- * 3b. If the other device is a HERA node (Android device), performs a read request on characteristicUUID 0x3001 on the connected device to get the other device's unique identifier
+ * 3a. If the other device is a Bean+ start node, performs read request to get stored data in the scratch memory of the Bean+ devices.
+ * 3b. If the other device is a Bean+ end node, performs write request to send the end node messages if there are messages in the MessageQueue.
+ * 3c. If the other device is a HERA node (Android device), performs a read request on characteristicUUID 0x3001 on the connected device to get the other device's unique identifier
  *     (Read more device unique identifiers in the MainActivity Class file)
  * 4. Change the connection MTU (So we can reduce the number of fragments when transmitting larger frames)
  * 5. Send our device's unique identifier (So the neighbor knows who we are, because the connections are pretty unidirectional)
- * 6. Send a copy of our HERA reachability matrix (So the neighbor can update their own reachability matrix, and then they make the decision of whether to send some packets to us using the HERA routing scheme)
- * 7. If we've already received the neighbor's reachability matrix through another asynchronous unidirectional connection
+ * 6. Check the previous time the HERA reachability matrix was exchanged. (We don't want to update too often when nodes stay near each other)
+ * 7. If time is shorter than the cooldown interval, skip to step 9.
+ * 8. Send a copy of our HERA reachability matrix (So the neighbor can update their own reachability matrix, and then they make the decision of whether to send some packets to us using the HERA routing scheme)
+ * 9. If we've already received the neighbor's reachability matrix through another asynchronous unidirectional connection
  *    (in which the other device is the client), and we have already computed that we have messages to send to this other device, start the message transmitting process via characteristicWrite(See more in BLEHandler Class file)
- * 8. We receive an acknowledgement for the characterWrite
- * 9a. If the fragment we sent was not the last fragment, send next fragment
- * 9b. If the fragment we sent was the last fragment, but there are more messages to send, send next message
- * 9c. If the fragment we sent was the last fragment, and there are no more message to send, terminates the connection
+ * 10. We receive an acknowledgement for the characterWrite
+ * 11a. If the fragment we sent was not the last fragment, send next fragment
+ * 11b. If the fragment we sent was the last fragment, but there are more messages to send, send next message
+ * 11c. If the fragment we sent was the last fragment, and there are no more message to send, terminates the connection
  *
  * Created by Steven on 3/13/2018.
  */
@@ -131,7 +135,29 @@ class BLEClient {
             if (newState == BluetoothGatt.STATE_CONNECTED){
                 connectionStatus.put(gatt.getDevice(), 2);
                 connecting = false;
-                gatt.discoverServices();
+                if (mConnectionSystem.isBean(gatt)) {
+                    mConnectionSystem.updateConnection(gatt.getDevice().getAddress(), gatt);
+                    Connection curConnection = mConnectionSystem.getConnection(gatt.getDevice().getAddress());
+                    if (mConnectionSystem.isStartBean(gatt)) {
+                        if (curConnection.getLastConnectedTimeDiff() >= HERA.REACH_COOL_DOWN_PERIOD) {
+                            gatt.readCharacteristic(gatt.getService(BeanScratchServiceUUID).getCharacteristic(BeanScratchFirstCharUUID));
+                        }
+                        else {
+                            gatt.disconnect();
+                        }
+                    }
+                    else if (mConnectionSystem.isEndBean(gatt)) {
+                        if (mMessageSystem.hasMessage("987bf3583813")) {
+                            mBLEHandler.sendMessageToEnd(gatt);
+                        }
+                        else {
+                            gatt.disconnect();
+                        }
+                    }
+                }
+                else {
+                    gatt.discoverServices();
+                }
             }
             else if (newState == BluetoothGatt.STATE_CONNECTING) {
 
@@ -161,6 +187,11 @@ class BLEClient {
                     }
                 }
                 else if (mConnectionSystem.isEndBean(gatt)) {
+                    if (curConnection.getLastConnectedTimeDiff() >= 20) {
+                        mHera.updateDirectHop("987bf3583813");
+                        curConnection.updateLastConnectedTime();
+                        mUiManager.updateHERAMatrixUI();
+                    }
                     if (mMessageSystem.hasMessage("987bf3583813")) {
                         mBLEHandler.sendMessageToEnd(gatt);
                     }
@@ -205,11 +236,11 @@ class BLEClient {
                 if (scratchNumber == 1) {
                     curConnection.writeToCache("987bf3583813".getBytes());
                 }
-                if (scratchNumber < 5) {
+                if (scratchNumber < 3) {
                     curConnection.writeToCache(characteristic.getValue());
                     gatt.readCharacteristic(gatt.getService(BeanScratchServiceUUID).getCharacteristic(UUID.fromString("A495FF2" + String.valueOf(scratchNumber + 1) + "-C5B1-4B44-B512-1370F02D74DE")));
                 }
-                else if (scratchNumber == 5) {
+                else if (scratchNumber == 3) {
                     curConnection.buildMessage(12);
                     curConnection.resetCache();
                     curConnection.updateLastConnectedTime();
@@ -239,14 +270,53 @@ class BLEClient {
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicWrite(gatt, characteristic, status);
             String TAG = "CharacteristicWrite";
+            /**
+             * When the neighbor is a Bean+ end node and we've already sent the first part of the message by write request.
+             */
+            if (mConnectionSystem.isBean(gatt)) {
+                int scratchNumber = Integer.valueOf(characteristic.getUuid().toString().substring(7, 8));
+                if (scratchNumber < 3) {
+                    BluetoothGattCharacteristic toSend = gatt.getService(BeanScratchServiceUUID).getCharacteristic(UUID.fromString("A495FF2" + String.valueOf(scratchNumber + 1) + "-C5B1-4B44-B512-1370F02D74DE"));
+                    switch(scratchNumber) {
+                        case 1:
+                            toSend.setValue(Arrays.copyOfRange(mMessageSystem.getMessage("987bf3583813").getData(), 1, 18));
+                            break;
+                        case 2:
+                            toSend.setValue(Arrays.copyOfRange(mMessageSystem.getMessage("987bf3583813").getData(), 18, 20));
+                            break;
+                    }
+                    gatt.writeCharacteristic(toSend);
+                    Log.d(TAG, new String(characteristic.getValue()));
+                }
+                else if (scratchNumber == 3) {
+                    mMessageSystem.getMessageQueue("987bf3583813").remove();
+                    mUiManager.updateMessageSystemUI();
+                    if(mMessageSystem.hasMessage("987bf3583813")) {
+                        try {
+                            Thread.sleep(1000);
+                        }
+                        catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        mBLEHandler.sendMessageToEnd(gatt);
+                    }
+                    else {
+                        gatt.disconnect();
+                    }
+                }
+                return;
+            }
+
+
             int dataType = characteristic.getValue()[0];
             int prevSegCount = characteristic.getValue()[1];
             int isLast = characteristic.getValue()[2];
             String neighborAndroidID = mConnectionSystem.getAndroidID(gatt);
             Connection curConnection = mConnectionSystem.getConnection(neighborAndroidID);
-            /*if we completed the first step of our handshake process, which is send device android ID,
+            /**if we completed the first step of our handshake process, which is send device android ID,
             * then depending on when the last HERA matrix was formed with the neighboring device,
-            * we'll decide if we want to send HERA matrix again or just check our to send queue.*/
+            * we'll decide if we want to send HERA matrix again or just check our to send queue.
+            */
             if (characteristic.getUuid().equals(mAndroidIDCharUUID)) {
                 if (mConnectionSystem.getConnection(neighborAndroidID).getLastConnectedTimeDiff() >= HERA.REACH_COOL_DOWN_PERIOD) {
                     curConnection.updateLastConnectedTime();
@@ -290,22 +360,6 @@ class BLEClient {
                 segmentToSend.setValue(mConnectionSystem.getToSendFragment(gatt, prevSegCount + 1, ConnectionSystem.DATA_TYPE_MATRIX));
                 gatt.writeCharacteristic(segmentToSend);
                 Log.d(TAG, "Fragment " + (prevSegCount + 1) + " sent");
-            }
-            else if (mConnectionSystem.isBean(gatt)) {
-                int scratchNumber = Integer.valueOf(characteristic.getUuid().toString().substring(7, 8));
-                if (scratchNumber < 5) {
-                    BluetoothGattCharacteristic toSend = gatt.getService(BeanScratchServiceUUID).getCharacteristic(UUID.fromString("A495FF2" + String.valueOf(scratchNumber + 1) + "-C5B1-4B44-B512-1370F02D74DE"));
-                    Log.d(TAG, ConnectionSystem.bytesToHex(characteristic.getValue()));
-                }
-                else if (scratchNumber == 5) {
-                    mMessageSystem.getMessageQueue("987bf3583813").remove();
-                    if(mMessageSystem.hasMessage("987bf3583813")) {
-                        mBLEHandler.sendMessageToEnd(gatt);
-                    }
-                    else {
-                        gatt.disconnect();
-                    }
-                }
             }
         }
     };

@@ -13,6 +13,8 @@ import java.util.List;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mBLEHandler;
 
 /**
+ * BLEScanner
+ * Scans for BLE Beacons
  * Created by Steven on 3/13/2018.
  */
 
@@ -40,6 +42,16 @@ public class BLEScanner {
 
     public void prepareScanSetting(){
         ScanSettings.Builder mScanSettingsBuilder = new ScanSettings.Builder();
+        /*
+        int SCAN_MODE_OPPORTUNISTIC   = -1
+        (No active scan, only waits for advertisement)
+        int SCAN_MODE_LOW_POWER       = 0x00
+        (scan period 2.5 minutes, active scan for 1.5 second, a 1% duty cycle)
+        int SCAN_MODE_BALANCED        = 0x01
+        (scan period 15 seconds, active scan for 1.5 second, a 10% duty cycle)
+        int SCAN_MODE_LOW_LATENCY     = 0x02
+        (scan period 1.67 second, active scan for 1.5 second, a 90% duty cycle)
+         */
         mScanSettingsBuilder.setScanMode(2);
         Log.d(TAG, "Scan Setting prepared");
         mScanSettings = mScanSettingsBuilder.build();

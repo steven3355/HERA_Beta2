@@ -33,6 +33,7 @@ public class MessageSystem {
     void putMessage(byte[] input, int destinationLength) {
         String dest = new String(Arrays.copyOfRange(input, 0, destinationLength));
         byte[] data = Arrays.copyOfRange(input, destinationLength, input.length);
+        data[data.length - 1]++;
         if (!messageMap.containsKey(dest)) {
             messageMap.put(dest, new LinkedList<Message>());
         }
@@ -76,10 +77,11 @@ public class MessageSystem {
     void generateTestMessage(String dest, int count) {
         messageMap.put(dest, new LinkedList<Message>());
         for (int i = 0; i < count; i++) {
-            messageMap.get(dest).add(new Message(dest, ("this is test message #" + i).getBytes()));
+            messageMap.get(dest).add(new Message(dest, ("TiMeTiMeTiMeTiMe!0" + (i + 1)).getBytes()));
         }
     }
     void generateTestMessageForClients() {
+//        generateTestMessage("987bf3583813", 5);
         switch(android_id) {
             case "8ab5e5cf2db6867a":
                 generateTestMessage("a1417d377e1333ac", 10);

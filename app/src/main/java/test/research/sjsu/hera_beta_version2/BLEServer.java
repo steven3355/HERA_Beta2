@@ -20,7 +20,8 @@ import static test.research.sjsu.hera_beta_version2.MainActivity.mHera;
 import static test.research.sjsu.hera_beta_version2.MainActivity.mMessageSystem;
 
 /**
- *
+ * BLEServer
+ * responds to connection, read, write requests from BLE Clients
  * Created by Steven on 3/13/2018.
  */
 
@@ -114,7 +115,7 @@ public class BLEServer {
                             Log.d(TAG, "No message to send");
                         }
                     } else if (dataType == ConnectionSystem.DATA_TYPE_MESSAGE) {
-                        curConnection.buildMessage(16);
+                        curConnection.buildMessage(12);
                         curConnection.resetCache();
                     }
                 }
